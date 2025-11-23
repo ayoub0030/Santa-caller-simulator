@@ -1,37 +1,61 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Plus, Search } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const GuestList = () => {
-  // Mock data - will be replaced with real data from Lovable Cloud
-  const guests = [
-    {
-      id: "1",
-      name: "John Smith",
-      email: "john.smith@email.com",
-      phone: "+1 234-567-8900",
-      totalStays: 5,
-      lastVisit: "2024-01-10",
-    },
-    {
-      id: "2",
-      name: "Sarah Johnson",
-      email: "sarah.j@email.com",
-      phone: "+1 234-567-8901",
-      totalStays: 3,
-      lastVisit: "2024-01-05",
-    },
-    {
-      id: "3",
-      name: "Michael Brown",
-      email: "m.brown@email.com",
-      phone: "+1 234-567-8902",
-      totalStays: 8,
-      lastVisit: "2023-12-28",
-    },
-  ];
+  const [guests, setGuests] = useState<any[]>([]);
+  const [filteredGuests, setFilteredGuests] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchGuests();
+  }, []);
+
+  useEffect(() => {
+    if (searchTerm) {
+      const filtered = guests.filter(guest =>
+        guest.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        guest.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        guest.phone?.includes(searchTerm)
+      );
+      setFilteredGuests(filtered);
+    } else {
+      setFilteredGuests(guests);
+    }
+  }, [searchTerm, guests]);
+
+  const fetchGuests = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('guests')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      setGuests(data || []);
+      setFilteredGuests(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error loading guests",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center py-8">Loading guests...</div>;
+  }
 
   return (
     <div className="space-y-4">
@@ -55,6 +79,8 @@ const GuestList = () => {
               <Input
                 placeholder="Search guests by name, email, or phone..."
                 className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
           </div>
@@ -70,20 +96,28 @@ const GuestList = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {guests.map((guest) => (
-                <TableRow key={guest.id}>
-                  <TableCell className="font-medium">{guest.name}</TableCell>
-                  <TableCell>{guest.email}</TableCell>
-                  <TableCell>{guest.phone}</TableCell>
-                  <TableCell>{guest.totalStays}</TableCell>
-                  <TableCell>{new Date(guest.lastVisit).toLocaleDateString()}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="outline" size="sm">
-                      View Profile
-                    </Button>
+              {filteredGuests.length > 0 ? (
+                filteredGuests.map((guest) => (
+                  <TableRow key={guest.id}>
+                    <TableCell className="font-medium">{guest.name}</TableCell>
+                    <TableCell>{guest.email || 'N/A'}</TableCell>
+                    <TableCell>{guest.phone || 'N/A'}</TableCell>
+                    <TableCell>{guest.total_stays || 0}</TableCell>
+                    <TableCell>{guest.last_visit ? new Date(guest.last_visit).toLocaleDateString() : 'Never'}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="outline" size="sm">
+                        View Profile
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    No guests found
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>

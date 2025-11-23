@@ -1,43 +1,45 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Plus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const ReservationList = () => {
-  // Mock data - will be replaced with real data from Lovable Cloud
-  const reservations = [
-    {
-      id: "1",
-      guestName: "John Smith",
-      room: "101",
-      checkIn: "2024-01-15",
-      checkOut: "2024-01-18",
-      status: "confirmed",
-      nights: 3,
-      total: 360,
-    },
-    {
-      id: "2",
-      guestName: "Sarah Johnson",
-      room: "205",
-      checkIn: "2024-01-16",
-      checkOut: "2024-01-20",
-      status: "pending",
-      nights: 4,
-      total: 720,
-    },
-    {
-      id: "3",
-      guestName: "Michael Brown",
-      room: "302",
-      checkIn: "2024-01-14",
-      checkOut: "2024-01-17",
-      status: "checked-in",
-      nights: 3,
-      total: 840,
-    },
-  ];
+  const [reservations, setReservations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchReservations();
+  }, []);
+
+  const fetchReservations = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('reservations')
+        .select(`
+          *,
+          guests (name, email, phone),
+          rooms (room_number, room_type)
+        `)
+        .order('check_in_date', { ascending: false });
+      
+      if (error) throw error;
+      setReservations(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error loading reservations",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -47,10 +49,25 @@ const ReservationList = () => {
         return <Badge className="bg-status-cleaning">Pending</Badge>;
       case "checked-in":
         return <Badge className="bg-status-occupied">Checked In</Badge>;
+      case "checked-out":
+        return <Badge className="bg-muted">Checked Out</Badge>;
+      case "cancelled":
+        return <Badge className="bg-status-maintenance">Cancelled</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
   };
+
+  const calculateNights = (checkIn: string, checkOut: string) => {
+    const start = new Date(checkIn);
+    const end = new Date(checkOut);
+    const diff = end.getTime() - start.getTime();
+    return Math.ceil(diff / (1000 * 3600 * 24));
+  };
+
+  if (loading) {
+    return <div className="text-center py-8">Loading reservations...</div>;
+  }
 
   return (
     <div className="space-y-4">
@@ -82,22 +99,30 @@ const ReservationList = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {reservations.map((reservation) => (
-                <TableRow key={reservation.id}>
-                  <TableCell className="font-medium">{reservation.guestName}</TableCell>
-                  <TableCell>{reservation.room}</TableCell>
-                  <TableCell>{new Date(reservation.checkIn).toLocaleDateString()}</TableCell>
-                  <TableCell>{new Date(reservation.checkOut).toLocaleDateString()}</TableCell>
-                  <TableCell>{reservation.nights}</TableCell>
-                  <TableCell>${reservation.total}</TableCell>
-                  <TableCell>{getStatusBadge(reservation.status)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="outline" size="sm">
-                      View
-                    </Button>
+              {reservations.length > 0 ? (
+                reservations.map((reservation) => (
+                  <TableRow key={reservation.id}>
+                    <TableCell className="font-medium">{reservation.guests?.name || 'N/A'}</TableCell>
+                    <TableCell>{reservation.rooms?.room_number || 'N/A'}</TableCell>
+                    <TableCell>{new Date(reservation.check_in_date).toLocaleDateString()}</TableCell>
+                    <TableCell>{new Date(reservation.check_out_date).toLocaleDateString()}</TableCell>
+                    <TableCell>{calculateNights(reservation.check_in_date, reservation.check_out_date)}</TableCell>
+                    <TableCell>${reservation.total_amount || 0}</TableCell>
+                    <TableCell>{getStatusBadge(reservation.status)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="outline" size="sm">
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    No reservations found
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>

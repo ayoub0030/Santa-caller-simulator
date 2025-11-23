@@ -1,20 +1,40 @@
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BedDouble, Settings } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const RoomGrid = () => {
-  // Mock data - will be replaced with real data from Lovable Cloud
-  const rooms = [
-    { number: "101", type: "Standard", status: "available", price: 120 },
-    { number: "102", type: "Standard", status: "occupied", price: 120, guest: "John Doe" },
-    { number: "103", type: "Standard", status: "cleaning", price: 120 },
-    { number: "201", type: "Deluxe", status: "available", price: 180 },
-    { number: "202", type: "Deluxe", status: "occupied", price: 180, guest: "Jane Smith" },
-    { number: "203", type: "Deluxe", status: "maintenance", price: 180 },
-    { number: "301", type: "Suite", status: "available", price: 280 },
-    { number: "302", type: "Suite", status: "occupied", price: 280, guest: "Bob Johnson" },
-  ];
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchRooms();
+  }, []);
+
+  const fetchRooms = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('rooms')
+        .select('*')
+        .order('room_number');
+      
+      if (error) throw error;
+      setRooms(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error loading rooms",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -31,6 +51,14 @@ const RoomGrid = () => {
     }
   };
 
+  const formatRoomType = (type: string) => {
+    return type.charAt(0).toUpperCase() + type.slice(1);
+  };
+
+  if (loading) {
+    return <div className="text-center py-8">Loading rooms...</div>;
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -46,23 +74,23 @@ const RoomGrid = () => {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {rooms.map((room) => (
-          <Card key={room.number} className="transition-all hover:shadow-md">
+          <Card key={room.id} className="transition-all hover:shadow-md">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Room {room.number}</CardTitle>
+                <CardTitle className="text-lg">Room {room.room_number}</CardTitle>
                 <BedDouble className="h-5 w-5 text-muted-foreground" />
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">{room.type}</span>
-                <span className="font-medium">${room.price}/night</span>
+                <span className="text-sm text-muted-foreground">{formatRoomType(room.room_type)}</span>
+                <span className="font-medium">${room.price_per_night}/night</span>
               </div>
               <Badge className={getStatusColor(room.status)}>
-                {room.status.charAt(0).toUpperCase() + room.status.slice(1)}
+                {formatRoomType(room.status)}
               </Badge>
-              {room.guest && (
-                <p className="text-sm text-muted-foreground">Guest: {room.guest}</p>
+              {room.description && (
+                <p className="text-xs text-muted-foreground line-clamp-2">{room.description}</p>
               )}
               <Button 
                 variant="outline" 
