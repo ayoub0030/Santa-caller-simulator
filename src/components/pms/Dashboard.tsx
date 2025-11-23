@@ -1,26 +1,99 @@
-import { BedDouble, Users, Calendar, TrendingUp } from "lucide-react";
+import { useEffect, useState } from "react";
+import { BedDouble, Calendar } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
-  // Mock data - will be replaced with real data from Lovable Cloud
-  const stats = [
-    { title: "Available Rooms", value: "8", icon: BedDouble, color: "text-status-available" },
-    { title: "Occupied Rooms", value: "12", icon: BedDouble, color: "text-status-occupied" },
-    { title: "Today's Check-ins", value: "5", icon: Calendar, color: "text-accent" },
-    { title: "Today's Check-outs", value: "3", icon: Calendar, color: "text-muted-foreground" },
-  ];
+  const [stats, setStats] = useState({
+    available: 0,
+    occupied: 0,
+    todayCheckIns: 0,
+    todayCheckOuts: 0,
+  });
+  const [todaysArrivals, setTodaysArrivals] = useState<any[]>([]);
+  const [roomStatusCounts, setRoomStatusCounts] = useState({
+    available: 0,
+    occupied: 0,
+    cleaning: 0,
+    maintenance: 0,
+  });
+  const { toast } = useToast();
 
-  const todaysArrivals = [
-    { name: "John Smith", room: "101", time: "2:00 PM" },
-    { name: "Sarah Johnson", room: "205", time: "3:30 PM" },
-    { name: "Michael Brown", room: "303", time: "4:00 PM" },
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      // Fetch room stats
+      const { data: rooms, error: roomsError } = await supabase
+        .from('rooms')
+        .select('status');
+      
+      if (roomsError) throw roomsError;
+
+      const statusCounts = {
+        available: rooms?.filter(r => r.status === 'available').length || 0,
+        occupied: rooms?.filter(r => r.status === 'occupied').length || 0,
+        cleaning: rooms?.filter(r => r.status === 'cleaning').length || 0,
+        maintenance: rooms?.filter(r => r.status === 'maintenance').length || 0,
+      };
+      setRoomStatusCounts(statusCounts);
+
+      // Fetch today's check-ins and check-outs
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { data: checkIns, error: checkInsError } = await supabase
+        .from('reservations')
+        .select('*, guests(name), rooms(room_number)')
+        .eq('check_in_date', today)
+        .in('status', ['confirmed', 'pending']);
+      
+      if (checkInsError) throw checkInsError;
+
+      const { data: checkOuts, error: checkOutsError } = await supabase
+        .from('reservations')
+        .select('id')
+        .eq('check_out_date', today)
+        .eq('status', 'checked-in');
+      
+      if (checkOutsError) throw checkOutsError;
+
+      setStats({
+        available: statusCounts.available,
+        occupied: statusCounts.occupied,
+        todayCheckIns: checkIns?.length || 0,
+        todayCheckOuts: checkOuts?.length || 0,
+      });
+
+      setTodaysArrivals(checkIns?.map(r => ({
+        name: r.guests?.name || 'Unknown',
+        room: r.rooms?.room_number || 'N/A',
+        time: '2:00 PM', // You can add time field to reservations if needed
+      })) || []);
+
+    } catch (error: any) {
+      toast({
+        title: "Error loading dashboard",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const statsData = [
+    { title: "Available Rooms", value: stats.available.toString(), icon: BedDouble, color: "text-status-available" },
+    { title: "Occupied Rooms", value: stats.occupied.toString(), icon: BedDouble, color: "text-status-occupied" },
+    { title: "Today's Check-ins", value: stats.todayCheckIns.toString(), icon: Calendar, color: "text-accent" },
+    { title: "Today's Check-outs", value: stats.todayCheckOuts.toString(), icon: Calendar, color: "text-muted-foreground" },
   ];
 
   return (
     <div className="space-y-6">
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
+        {statsData.map((stat) => (
           <Card key={stat.title} className="transition-shadow hover:shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
@@ -42,15 +115,19 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {todaysArrivals.map((guest) => (
-                <div key={guest.room} className="flex items-center justify-between rounded-lg border p-3">
-                  <div>
-                    <p className="font-medium">{guest.name}</p>
-                    <p className="text-sm text-muted-foreground">Room {guest.room}</p>
+              {todaysArrivals.length > 0 ? (
+                todaysArrivals.map((guest, index) => (
+                  <div key={index} className="flex items-center justify-between rounded-lg border p-3">
+                    <div>
+                      <p className="font-medium">{guest.name}</p>
+                      <p className="text-sm text-muted-foreground">Room {guest.room}</p>
+                    </div>
+                    <span className="text-sm text-muted-foreground">{guest.time}</span>
                   </div>
-                  <span className="text-sm text-muted-foreground">{guest.time}</span>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-center text-muted-foreground">No arrivals today</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -67,28 +144,28 @@ const Dashboard = () => {
                   <div className="h-3 w-3 rounded-full bg-status-available"></div>
                   <span className="text-sm">Available</span>
                 </div>
-                <span className="font-medium">8 rooms</span>
+                <span className="font-medium">{roomStatusCounts.available} rooms</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="h-3 w-3 rounded-full bg-status-occupied"></div>
                   <span className="text-sm">Occupied</span>
                 </div>
-                <span className="font-medium">12 rooms</span>
+                <span className="font-medium">{roomStatusCounts.occupied} rooms</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="h-3 w-3 rounded-full bg-status-cleaning"></div>
                   <span className="text-sm">Cleaning</span>
                 </div>
-                <span className="font-medium">2 rooms</span>
+                <span className="font-medium">{roomStatusCounts.cleaning} rooms</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="h-3 w-3 rounded-full bg-status-maintenance"></div>
                   <span className="text-sm">Maintenance</span>
                 </div>
-                <span className="font-medium">1 room</span>
+                <span className="font-medium">{roomStatusCounts.maintenance} rooms</span>
               </div>
             </div>
           </CardContent>
