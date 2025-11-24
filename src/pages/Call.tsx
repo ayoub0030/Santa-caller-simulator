@@ -95,23 +95,23 @@ const Call = () => {
       }
 
       // Wait for SDK to load from index.html
-      let ConvAI = (window as any).ElevenLabsConvAI;
+      let ElevenLabsClient = (window as any).ElevenLabsClient;
       let attempts = 0;
       
-      while (!ConvAI && attempts < 20) {
+      while (!ElevenLabsClient && attempts < 20) {
         await new Promise(resolve => setTimeout(resolve, 100));
-        ConvAI = (window as any).ElevenLabsConvAI;
+        ElevenLabsClient = (window as any).ElevenLabsClient;
         attempts++;
       }
       
-      if (!ConvAI) {
+      if (!ElevenLabsClient) {
         setError("ElevenLabs SDK failed to load. Check your internet connection.");
         setIsCallActive(false);
-        console.error("ElevenLabsConvAI not found after waiting. Window keys:", Object.keys(window).filter(k => k.includes('Eleven') || k.includes('Labs')));
+        console.error("ElevenLabsClient not found after waiting. Window keys:", Object.keys(window).filter(k => k.toLowerCase().includes('eleven') || k.toLowerCase().includes('labs')));
         return;
       }
 
-      const { Conversation } = ConvAI;
+      const { Conversation } = ElevenLabsClient;
 
       if (!Conversation) {
         setError("Conversation class not found in ElevenLabs SDK");
