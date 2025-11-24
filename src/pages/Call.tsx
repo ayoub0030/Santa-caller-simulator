@@ -94,119 +94,82 @@ const Call = () => {
         return;
       }
 
-      // Load ElevenLabs SDK from CDN
-      const script = document.createElement("script");
-      script.src = "https://unpkg.com/@11labs/convai@latest/dist/index.js";
-      script.async = true;
-
-      script.onload = async () => {
-        try {
-          // @ts-ignore - ElevenLabsConvAI is loaded from CDN
-          const ConvAI = (window as any).ElevenLabsConvAI;
-          
-          if (!ConvAI) {
-            throw new Error("ElevenLabsConvAI not found on window");
-          }
-          
-          const { Conversation } = ConvAI;
-
-          if (!Conversation) {
-            setError("Failed to load ElevenLabs SDK");
-            setIsCallActive(false);
-            return;
-          }
-
-          // Initialize conversation with proper authentication
-          const conversation = new Conversation({
-            onMessage: (message: any) => {
-              console.log("Agent message:", message);
-              if (message.text) {
-                setCallStatus(`Agent: ${message.text}`);
-              }
-            },
-            onError: (error: any) => {
-              console.error("Conversation error:", error);
-              setError(error?.message || "Call error occurred");
-              setIsCallActive(false);
-              toast({
-                title: "Call Error",
-                description: error?.message || "An error occurred during the call",
-                variant: "destructive",
-              });
-            },
-            onStatusChange: (status: string) => {
-              console.log("Call status:", status);
-              setCallStatus(`Status: ${status}`);
-            },
-          });
-
-          // Start session with agent
-          await conversation.startSession({
-            agentId: agentId,
-            clientData: {
-              hotelData: hotelData,
-            },
-          });
-
-          // Listen for agent responses (reservation data)
-          conversation.on("agent_response", async (response: any) => {
-            console.log("Agent response received:", response);
-
-            // Check if response contains reservation data
-            if (response?.data?.reservation) {
-              await handleReservationFromAgent(response.data.reservation);
-            } else if (response?.reservation) {
-              await handleReservationFromAgent(response.reservation);
-            }
-          });
-
-          // Store conversation reference
-          conversationRef.current = conversation;
-          setCallStatus("Connected! Speak now...");
-        } catch (err: any) {
-          console.error("Error initializing conversation:", err);
-          setError(err?.message || "Failed to initialize conversation");
-          setIsCallActive(false);
-          toast({
-            title: "Error",
-            description: err?.message || "Failed to initialize conversation",
-            variant: "destructive",
-          });
-        }
-      };
-
-      script.onerror = (error) => {
-        console.error("Failed to load ElevenLabs SDK from CDN:", error);
-        console.error("Script src was:", script.src);
-        setError("Failed to load ElevenLabs SDK. Trying alternative CDN...");
+      // Check if SDK is already loaded from index.html
+      const ConvAI = (window as any).ElevenLabsConvAI;
+      
+      if (!ConvAI) {
+        setError("ElevenLabs SDK not loaded. Please refresh the page.");
         setIsCallActive(false);
-        
-        // Try alternative CDN
-        const altScript = document.createElement("script");
-        altScript.src = "https://cdn.jsdelivr.net/npm/@11labs/convai/dist/index.js";
-        altScript.async = true;
-        
-        altScript.onload = () => {
-          console.log("Alternative CDN loaded successfully");
-          setError(null);
-          // Retry the call
-          setTimeout(() => startCall(), 500);
-        };
-        
-        altScript.onerror = () => {
-          console.error("Both CDN URLs failed");
-          setError("Failed to load ElevenLabs SDK from both CDNs. Check your internet connection.");
-          toast({
-            title: "SDK Load Error",
-            description: "Failed to load ElevenLabs SDK. Please check your internet connection.",
-            variant: "destructive",
-          });
-        };
-        
-        document.body.appendChild(altScript);
-      };
+        console.error("ElevenLabsConvAI not found on window. Available:", Object.keys(window).filter(k => k.includes('Eleven')));
+        return;
+      }
 
-      document.body.appendChild(script);
+      const { Conversation } = ConvAI;
+
+      if (!Conversation) {
+        setError("Conversation class not found in ElevenLabs SDK");
+        setIsCallActive(false);
+        return;
+      }
+
+      try {
+        // Initialize conversation with proper authentication
+        const conversation = new Conversation({
+          onMessage: (message: any) => {
+            console.log("Agent message:", message);
+            if (message.text) {
+              setCallStatus(`Agent: ${message.text}`);
+            }
+          },
+          onError: (error: any) => {
+            console.error("Conversation error:", error);
+            setError(error?.message || "Call error occurred");
+            setIsCallActive(false);
+            toast({
+              title: "Call Error",
+              description: error?.message || "An error occurred during the call",
+              variant: "destructive",
+            });
+          },
+          onStatusChange: (status: string) => {
+            console.log("Call status:", status);
+            setCallStatus(`Status: ${status}`);
+          },
+        });
+
+        // Start session with agent
+        await conversation.startSession({
+          agentId: agentId,
+          clientData: {
+            hotelData: hotelData,
+          },
+        });
+
+        // Listen for agent responses (reservation data)
+        conversation.on("agent_response", async (response: any) => {
+          console.log("Agent response received:", response);
+
+          // Check if response contains reservation data
+          if (response?.data?.reservation) {
+            await handleReservationFromAgent(response.data.reservation);
+          } else if (response?.reservation) {
+            await handleReservationFromAgent(response.reservation);
+          }
+        });
+
+        // Store conversation reference
+        conversationRef.current = conversation;
+        setCallStatus("Connected! Speak now...");
+      } catch (err: any) {
+        console.error("Error initializing conversation:", err);
+        setError(err?.message || "Failed to initialize conversation");
+        setIsCallActive(false);
+        toast({
+          title: "Error",
+          description: err?.message || "Failed to initialize conversation",
+          variant: "destructive",
+        });
+      }
     } catch (err: any) {
       console.error("Error starting call:", err);
       setError(err?.message || "Failed to start call. Check console for details.");
