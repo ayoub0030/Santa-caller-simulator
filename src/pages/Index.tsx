@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Calendar, Users, BedDouble, DoorOpen, BarChart3 } from "lucide-react";
+import { Calendar, Users, BedDouble, DoorOpen, BarChart3, Phone } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Dashboard from "@/components/pms/Dashboard";
@@ -30,6 +32,12 @@ const Index = () => {
                   day: 'numeric' 
                 })}
               </span>
+              <Link to="/call">
+                <Button className="bg-status-available hover:bg-status-available/90">
+                  <Phone className="mr-2 h-4 w-4" />
+                  Call Agent
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
