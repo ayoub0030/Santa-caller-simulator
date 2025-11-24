@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Phone, PhoneOff, Loader2, AlertCircle } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Phone, PhoneOff, Loader2, AlertCircle, Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -31,6 +31,8 @@ const Call = () => {
   const [hotelData, setHotelData] = useState<HotelData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [callStatus, setCallStatus] = useState<string>("Ready to call");
+  const [isMuted, setIsMuted] = useState(false);
+  const conversationRef = useRef<any>(null);
   const { toast } = useToast();
 
   // Fetch hotel data on component mount
@@ -80,76 +82,90 @@ const Call = () => {
 
     try {
       setIsCallActive(true);
-      setCallStatus("Initializing call...");
+      setCallStatus("Connecting to agent...");
       setError(null);
 
-      // Dynamically load ElevenLabs SDK
-      const script = document.createElement("script");
-      script.src = "https://cdn.jsdelivr.net/npm/@11labs/convai@latest/dist/index.js";
-      script.async = true;
+      const agentId = process.env.VITE_ELEVENLABS_AGENT_ID;
+      const apiKey = process.env.VITE_ELEVENLABS_API_KEY;
 
-      script.onload = () => {
-        // @ts-ignore
-        const ConvAI = window.ElevenLabsConvAI;
-
-        if (!ConvAI) {
-          setError("Failed to load ElevenLabs SDK");
-          setIsCallActive(false);
-          return;
-        }
-
-        // Initialize conversation
-        const conversation = new ConvAI.Conversation({
-          onMessage: (message: any) => {
-            console.log("Agent message:", message);
-            setCallStatus(`Agent: ${message.text || "..."}`);
-          },
-          onError: (error: any) => {
-            console.error("Conversation error:", error);
-            setError(error.message || "Call error occurred");
-            setIsCallActive(false);
-          },
-          onStatusChange: (status: string) => {
-            console.log("Status:", status);
-            setCallStatus(`Status: ${status}`);
-          },
-        });
-
-        // Start the conversation with hotel data context
-        conversation.startSession({
-          agentId: process.env.VITE_ELEVENLABS_AGENT_ID || "",
-          // Pass hotel data as context to the agent
-          clientData: {
-            hotelData: hotelData,
-          },
-        });
-
-        // Listen for agent responses (reservation data)
-        conversation.on("agent_response", async (response: any) => {
-          console.log("Agent response:", response);
-
-          // Check if response contains reservation data
-          if (response.data?.reservation) {
-            await handleReservationFromAgent(response.data.reservation);
-          }
-        });
-
-        // Store conversation reference for cleanup
-        (window as any).currentConversation = conversation;
-      };
-
-      script.onerror = () => {
-        setError("Failed to load ElevenLabs SDK");
+      if (!agentId || !apiKey) {
+        setError("Missing ElevenLabs configuration (Agent ID or API Key)");
         setIsCallActive(false);
-      };
+        return;
+      }
 
-      document.body.appendChild(script);
+      // Import ElevenLabs SDK dynamically
+      let Conversation;
+      try {
+        const module = await import("@11labs/convai");
+        Conversation = module.Conversation;
+      } catch (importErr) {
+        console.error("Failed to import ElevenLabs SDK:", importErr);
+        setError("ElevenLabs SDK not available. Please ensure it's installed.");
+        setIsCallActive(false);
+        return;
+      }
+
+      if (!Conversation) {
+        setError("ElevenLabs Conversation class not found");
+        setIsCallActive(false);
+        return;
+      }
+
+      // Initialize conversation with proper authentication
+      const conversation = new Conversation({
+        onMessage: (message: any) => {
+          console.log("Agent message:", message);
+          if (message.text) {
+            setCallStatus(`Agent: ${message.text}`);
+          }
+        },
+        onError: (error: any) => {
+          console.error("Conversation error:", error);
+          setError(error?.message || "Call error occurred");
+          setIsCallActive(false);
+          toast({
+            title: "Call Error",
+            description: error?.message || "An error occurred during the call",
+            variant: "destructive",
+          });
+        },
+        onStatusChange: (status: string) => {
+          console.log("Call status:", status);
+          setCallStatus(`Status: ${status}`);
+        },
+      });
+
+      // Start session with agent
+      await conversation.startSession({
+        agentId: agentId,
+        clientData: {
+          hotelData: hotelData,
+        },
+      });
+
+      // Listen for agent responses (reservation data)
+      conversation.on("agent_response", async (response: any) => {
+        console.log("Agent response received:", response);
+
+        // Check if response contains reservation data
+        if (response?.data?.reservation) {
+          await handleReservationFromAgent(response.data.reservation);
+        } else if (response?.reservation) {
+          await handleReservationFromAgent(response.reservation);
+        }
+      });
+
+      // Store conversation reference
+      conversationRef.current = conversation;
+      setCallStatus("Connected! Speak now...");
     } catch (err: any) {
-      setError(err.message);
+      console.error("Error starting call:", err);
+      setError(err?.message || "Failed to start call. Check console for details.");
       setIsCallActive(false);
       toast({
         title: "Error starting call",
-        description: err.message,
+        description: err?.message || "Failed to initialize ElevenLabs SDK",
         variant: "destructive",
       });
     }
@@ -190,16 +206,30 @@ const Call = () => {
 
   const endCall = () => {
     try {
-      // @ts-ignore
-      if (window.currentConversation) {
-        // @ts-ignore
-        window.currentConversation.endSession();
+      if (conversationRef.current) {
+        conversationRef.current.endSession();
       }
       setIsCallActive(false);
       setCallStatus("Call ended");
+      conversationRef.current = null;
     } catch (err: any) {
       console.error("Error ending call:", err);
       setIsCallActive(false);
+    }
+  };
+
+  const toggleMute = () => {
+    try {
+      if (conversationRef.current) {
+        if (isMuted) {
+          conversationRef.current.unmute();
+        } else {
+          conversationRef.current.mute();
+        }
+        setIsMuted(!isMuted);
+      }
+    } catch (err: any) {
+      console.error("Error toggling mute:", err);
     }
   };
 
@@ -266,14 +296,33 @@ const Call = () => {
                 </Button>
 
                 {isCallActive && (
-                  <Button
-                    onClick={endCall}
-                    variant="destructive"
-                    className="flex-1"
-                  >
-                    <PhoneOff className="mr-2 h-4 w-4" />
-                    End Call
-                  </Button>
+                  <>
+                    <Button
+                      onClick={toggleMute}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      {isMuted ? (
+                        <>
+                          <MicOff className="mr-2 h-4 w-4" />
+                          Unmute
+                        </>
+                      ) : (
+                        <>
+                          <Mic className="mr-2 h-4 w-4" />
+                          Mute
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      onClick={endCall}
+                      variant="destructive"
+                      className="flex-1"
+                    >
+                      <PhoneOff className="mr-2 h-4 w-4" />
+                      End Call
+                    </Button>
+                  </>
                 )}
               </div>
 
