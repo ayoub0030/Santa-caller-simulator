@@ -96,13 +96,19 @@ const Call = () => {
 
       // Load ElevenLabs SDK from CDN
       const script = document.createElement("script");
-      script.src = "https://cdn.jsdelivr.net/npm/@11labs/convai@latest/dist/index.js";
+      script.src = "https://unpkg.com/@11labs/convai@latest/dist/index.js";
       script.async = true;
 
       script.onload = async () => {
         try {
           // @ts-ignore - ElevenLabsConvAI is loaded from CDN
-          const { Conversation } = window.ElevenLabsConvAI;
+          const ConvAI = (window as any).ElevenLabsConvAI;
+          
+          if (!ConvAI) {
+            throw new Error("ElevenLabsConvAI not found on window");
+          }
+          
+          const { Conversation } = ConvAI;
 
           if (!Conversation) {
             setError("Failed to load ElevenLabs SDK");
@@ -169,15 +175,35 @@ const Call = () => {
         }
       };
 
-      script.onerror = () => {
-        console.error("Failed to load ElevenLabs SDK from CDN");
-        setError("Failed to load ElevenLabs SDK. Check your internet connection.");
+      script.onerror = (error) => {
+        console.error("Failed to load ElevenLabs SDK from CDN:", error);
+        console.error("Script src was:", script.src);
+        setError("Failed to load ElevenLabs SDK. Trying alternative CDN...");
         setIsCallActive(false);
-        toast({
-          title: "SDK Load Error",
-          description: "Failed to load ElevenLabs SDK from CDN",
-          variant: "destructive",
-        });
+        
+        // Try alternative CDN
+        const altScript = document.createElement("script");
+        altScript.src = "https://cdn.jsdelivr.net/npm/@11labs/convai/dist/index.js";
+        altScript.async = true;
+        
+        altScript.onload = () => {
+          console.log("Alternative CDN loaded successfully");
+          setError(null);
+          // Retry the call
+          setTimeout(() => startCall(), 500);
+        };
+        
+        altScript.onerror = () => {
+          console.error("Both CDN URLs failed");
+          setError("Failed to load ElevenLabs SDK from both CDNs. Check your internet connection.");
+          toast({
+            title: "SDK Load Error",
+            description: "Failed to load ElevenLabs SDK. Please check your internet connection.",
+            variant: "destructive",
+          });
+        };
+        
+        document.body.appendChild(altScript);
       };
 
       document.body.appendChild(script);
