@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BedDouble, Settings } from "lucide-react";
+import { BedDouble, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AddRoomDialog } from "./AddRoomDialog";
 
 const RoomGrid = () => {
   const [rooms, setRooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -61,14 +63,22 @@ const RoomGrid = () => {
 
   return (
     <div className="space-y-4">
+      <AddRoomDialog 
+        open={showAddDialog} 
+        onOpenChange={setShowAddDialog}
+        onSuccess={fetchRooms}
+      />
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Room Management</h2>
           <p className="text-muted-foreground">View and manage all rooms</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90">
-          <Settings className="mr-2 h-4 w-4" />
-          Room Settings
+        <Button 
+          className="bg-primary hover:bg-primary/90"
+          onClick={() => setShowAddDialog(true)}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add Room
         </Button>
       </div>
 
