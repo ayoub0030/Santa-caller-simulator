@@ -94,13 +94,20 @@ const Call = () => {
         return;
       }
 
-      // Check if SDK is already loaded from index.html
-      const ConvAI = (window as any).ElevenLabsConvAI;
+      // Wait for SDK to load from index.html
+      let ConvAI = (window as any).ElevenLabsConvAI;
+      let attempts = 0;
+      
+      while (!ConvAI && attempts < 20) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        ConvAI = (window as any).ElevenLabsConvAI;
+        attempts++;
+      }
       
       if (!ConvAI) {
-        setError("ElevenLabs SDK not loaded. Please refresh the page.");
+        setError("ElevenLabs SDK failed to load. Check your internet connection.");
         setIsCallActive(false);
-        console.error("ElevenLabsConvAI not found on window. Available:", Object.keys(window).filter(k => k.includes('Eleven')));
+        console.error("ElevenLabsConvAI not found after waiting. Window keys:", Object.keys(window).filter(k => k.includes('Eleven') || k.includes('Labs')));
         return;
       }
 
