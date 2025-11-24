@@ -1,11 +1,10 @@
-import { useEffect, useState, useRef } from "react";
-import { Phone, PhoneOff, Loader2, AlertCircle, Mic, MicOff } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Phone, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { createReservationFromAgent } from "@/lib/reservationHandler";
 
 interface HotelData {
   hotelName: string;
@@ -26,13 +25,9 @@ interface HotelData {
 }
 
 const Call = () => {
-  const [isCallActive, setIsCallActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hotelData, setHotelData] = useState<HotelData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [callStatus, setCallStatus] = useState<string>("Ready to call");
-  const [isMuted, setIsMuted] = useState(false);
-  const conversationRef = useRef<any>(null);
   const { toast } = useToast();
 
   // Fetch hotel data on component mount
@@ -74,180 +69,47 @@ const Call = () => {
     }
   };
 
-  const startCall = async () => {
-    if (!hotelData) {
-      setError("Hotel data not loaded");
+  const openElevenLabsWidget = () => {
+    const agentId = import.meta.env.VITE_ELEVENLABS_AGENT_ID;
+
+    if (!agentId) {
+      setError("Missing ElevenLabs Agent ID. Please configure it in .env");
+      toast({
+        title: "Configuration Error",
+        description: "ElevenLabs Agent ID is not configured",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Open the ElevenLabs widget
+    const widget = (window as any).ElevenLabsConvAIWidget;
+    
+    if (!widget) {
+      setError("ElevenLabs widget not loaded. Please refresh the page.");
+      toast({
+        title: "Widget Error",
+        description: "ElevenLabs widget failed to load",
+        variant: "destructive",
+      });
       return;
     }
 
     try {
-      setIsCallActive(true);
-      setCallStatus("Connecting to agent...");
-      setError(null);
-
-      const agentId = import.meta.env.VITE_ELEVENLABS_AGENT_ID;
-      const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
-
-      if (!agentId || !apiKey) {
-        setError("Missing ElevenLabs configuration (Agent ID or API Key)");
-        setIsCallActive(false);
-        return;
-      }
-
-      // Wait for SDK to load from index.html
-      let ElevenLabsClient = (window as any).ElevenLabsClient;
-      let attempts = 0;
-      
-      while (!ElevenLabsClient && attempts < 20) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        ElevenLabsClient = (window as any).ElevenLabsClient;
-        attempts++;
-      }
-      
-      if (!ElevenLabsClient) {
-        setError("ElevenLabs SDK failed to load. Check your internet connection.");
-        setIsCallActive(false);
-        console.error("ElevenLabsClient not found after waiting. Window keys:", Object.keys(window).filter(k => k.toLowerCase().includes('eleven') || k.toLowerCase().includes('labs')));
-        return;
-      }
-
-      const { Conversation } = ElevenLabsClient;
-
-      if (!Conversation) {
-        setError("Conversation class not found in ElevenLabs SDK");
-        setIsCallActive(false);
-        return;
-      }
-
-      try {
-        // Initialize conversation with proper authentication
-        const conversation = new Conversation({
-          onMessage: (message: any) => {
-            console.log("Agent message:", message);
-            if (message.text) {
-              setCallStatus(`Agent: ${message.text}`);
-            }
-          },
-          onError: (error: any) => {
-            console.error("Conversation error:", error);
-            setError(error?.message || "Call error occurred");
-            setIsCallActive(false);
-            toast({
-              title: "Call Error",
-              description: error?.message || "An error occurred during the call",
-              variant: "destructive",
-            });
-          },
-          onStatusChange: (status: string) => {
-            console.log("Call status:", status);
-            setCallStatus(`Status: ${status}`);
-          },
-        });
-
-        // Start session with agent
-        await conversation.startSession({
-          agentId: agentId,
-          clientData: {
-            hotelData: hotelData,
-          },
-        });
-
-        // Listen for agent responses (reservation data)
-        conversation.on("agent_response", async (response: any) => {
-          console.log("Agent response received:", response);
-
-          // Check if response contains reservation data
-          if (response?.data?.reservation) {
-            await handleReservationFromAgent(response.data.reservation);
-          } else if (response?.reservation) {
-            await handleReservationFromAgent(response.reservation);
-          }
-        });
-
-        // Store conversation reference
-        conversationRef.current = conversation;
-        setCallStatus("Connected! Speak now...");
-      } catch (err: any) {
-        console.error("Error initializing conversation:", err);
-        setError(err?.message || "Failed to initialize conversation");
-        setIsCallActive(false);
-        toast({
-          title: "Error",
-          description: err?.message || "Failed to initialize conversation",
-          variant: "destructive",
-        });
-      }
+      widget.openSession({
+        agentId: agentId,
+        clientData: {
+          hotelData: hotelData,
+        },
+      });
     } catch (err: any) {
-      console.error("Error starting call:", err);
-      setError(err?.message || "Failed to start call. Check console for details.");
-      setIsCallActive(false);
+      console.error("Error opening widget:", err);
+      setError(err?.message || "Failed to open call widget");
       toast({
-        title: "Error starting call",
-        description: err?.message || "Failed to start call",
+        title: "Error",
+        description: err?.message || "Failed to open call widget",
         variant: "destructive",
       });
-    }
-  };
-
-  const handleReservationFromAgent = async (reservationData: any) => {
-    try {
-      setCallStatus("Processing reservation...");
-
-      const result = await createReservationFromAgent(reservationData);
-
-      if (result.success) {
-        toast({
-          title: "Reservation created!",
-          description: `Reservation ID: ${result.reservationId}`,
-        });
-        setCallStatus("Reservation confirmed! Ending call...");
-        setTimeout(() => {
-          endCall();
-        }, 2000);
-      } else {
-        setError(result.error || "Failed to create reservation");
-        toast({
-          title: "Reservation failed",
-          description: result.error,
-          variant: "destructive",
-        });
-      }
-    } catch (err: any) {
-      setError(err.message);
-      toast({
-        title: "Error processing reservation",
-        description: err.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const endCall = () => {
-    try {
-      if (conversationRef.current) {
-        conversationRef.current.endSession();
-      }
-      setIsCallActive(false);
-      setCallStatus("Call ended");
-      conversationRef.current = null;
-    } catch (err: any) {
-      console.error("Error ending call:", err);
-      setIsCallActive(false);
-    }
-  };
-
-  const toggleMute = () => {
-    try {
-      if (conversationRef.current) {
-        if (isMuted) {
-          conversationRef.current.unmute();
-        } else {
-          conversationRef.current.mute();
-        }
-        setIsMuted(!isMuted);
-      }
-    } catch (err: any) {
-      console.error("Error toggling mute:", err);
     }
   };
 
@@ -279,12 +141,6 @@ const Call = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Call Status */}
-              <div className="rounded-lg bg-muted p-4 text-center">
-                <p className="text-sm text-muted-foreground mb-2">Status</p>
-                <p className="font-medium text-foreground">{callStatus}</p>
-              </div>
-
               {/* Error Alert */}
               {error && (
                 <Alert variant="destructive">
@@ -293,56 +149,24 @@ const Call = () => {
                 </Alert>
               )}
 
-              {/* Call Buttons */}
-              <div className="flex gap-3">
-                <Button
-                  onClick={startCall}
-                  disabled={isCallActive || isLoading || !hotelData}
-                  className="flex-1 bg-status-available hover:bg-status-available/90"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    <>
-                      <Phone className="mr-2 h-4 w-4" />
-                      Start Call
-                    </>
-                  )}
-                </Button>
-
-                {isCallActive && (
+              {/* Call Button */}
+              <Button
+                onClick={openElevenLabsWidget}
+                disabled={isLoading || !hotelData}
+                className="w-full bg-status-available hover:bg-status-available/90"
+              >
+                {isLoading ? (
                   <>
-                    <Button
-                      onClick={toggleMute}
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      {isMuted ? (
-                        <>
-                          <MicOff className="mr-2 h-4 w-4" />
-                          Unmute
-                        </>
-                      ) : (
-                        <>
-                          <Mic className="mr-2 h-4 w-4" />
-                          Mute
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      onClick={endCall}
-                      variant="destructive"
-                      className="flex-1"
-                    >
-                      <PhoneOff className="mr-2 h-4 w-4" />
-                      End Call
-                    </Button>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <Phone className="mr-2 h-4 w-4" />
+                    Start Call
                   </>
                 )}
-              </div>
+              </Button>
 
               {/* Info */}
               <div className="rounded-lg bg-blue-50 dark:bg-blue-950 p-4 text-sm">
