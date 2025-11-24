@@ -161,7 +161,7 @@ const CheckInOut = () => {
                             Room {reservation.rooms?.room_number} • {formatRoomType(reservation.rooms?.room_type)}
                           </p>
                         </div>
-                        <Badge variant="outline">2:00 PM</Badge>
+                        <Badge variant="outline">{reservation.check_in_time || '2:00 PM'}</Badge>
                       </div>
                       <Button 
                         className="w-full bg-status-available hover:bg-status-available/90"
@@ -202,7 +202,7 @@ const CheckInOut = () => {
                             Room {reservation.rooms?.room_number} • {formatRoomType(reservation.rooms?.room_type)}
                           </p>
                         </div>
-                        <Badge variant="outline">11:00 AM</Badge>
+                        <Badge variant="outline">{reservation.check_out_time || '11:00 AM'}</Badge>
                       </div>
                       <Button 
                         className="w-full bg-accent hover:bg-accent/90"
