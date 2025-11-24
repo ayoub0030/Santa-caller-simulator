@@ -85,8 +85,8 @@ const Call = () => {
       setCallStatus("Connecting to agent...");
       setError(null);
 
-      const agentId = process.env.VITE_ELEVENLABS_AGENT_ID;
-      const apiKey = process.env.VITE_ELEVENLABS_API_KEY;
+      const agentId = import.meta.env.VITE_ELEVENLABS_AGENT_ID;
+      const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
 
       if (!agentId || !apiKey) {
         setError("Missing ElevenLabs configuration (Agent ID or API Key)");
