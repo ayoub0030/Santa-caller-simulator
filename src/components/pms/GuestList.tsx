@@ -6,12 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Plus, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AddGuestDialog } from "./AddGuestDialog";
 
 const GuestList = () => {
   const [guests, setGuests] = useState<any[]>([]);
   const [filteredGuests, setFilteredGuests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -59,6 +61,11 @@ const GuestList = () => {
 
   return (
     <div className="space-y-4">
+      <AddGuestDialog 
+        open={showAddDialog} 
+        onOpenChange={setShowAddDialog}
+        onSuccess={fetchGuests}
+      />
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -66,7 +73,10 @@ const GuestList = () => {
               <CardTitle>Guest Directory</CardTitle>
               <CardDescription>Manage guest information and history</CardDescription>
             </div>
-            <Button className="bg-accent hover:bg-accent/90">
+            <Button 
+              className="bg-accent hover:bg-accent/90"
+              onClick={() => setShowAddDialog(true)}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Add Guest
             </Button>
