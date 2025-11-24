@@ -6,10 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AddReservationDialog } from "./AddReservationDialog";
 
 const ReservationList = () => {
   const [reservations, setReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -71,6 +73,11 @@ const ReservationList = () => {
 
   return (
     <div className="space-y-4">
+      <AddReservationDialog 
+        open={showAddDialog} 
+        onOpenChange={setShowAddDialog}
+        onSuccess={fetchReservations}
+      />
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -78,7 +85,10 @@ const ReservationList = () => {
               <CardTitle>Reservations</CardTitle>
               <CardDescription>Manage all property reservations</CardDescription>
             </div>
-            <Button className="bg-accent hover:bg-accent/90">
+            <Button 
+              className="bg-primary hover:bg-primary/90"
+              onClick={() => setShowAddDialog(true)}
+            >
               <Plus className="mr-2 h-4 w-4" />
               New Reservation
             </Button>
