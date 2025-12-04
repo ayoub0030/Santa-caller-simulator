@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { Phone, Loader2, AlertCircle } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Link } from "react-router-dom";
+import { Phone, Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -28,6 +29,8 @@ const Call = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hotelData, setHotelData] = useState<HotelData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showWidget, setShowWidget] = useState(false);
+  const widgetContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   // Fetch hotel data on component mount
@@ -82,35 +85,14 @@ const Call = () => {
       return;
     }
 
-    // Open the ElevenLabs widget
-    const widget = (window as any).ElevenLabsConvAIWidget;
+    // Show the widget container - the <elevenlabs-convai> element will render
+    setShowWidget(true);
+    setError(null);
     
-    if (!widget) {
-      setError("ElevenLabs widget not loaded. Please refresh the page.");
-      toast({
-        title: "Widget Error",
-        description: "ElevenLabs widget failed to load",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      widget.openSession({
-        agentId: agentId,
-        clientData: {
-          hotelData: hotelData,
-        },
-      });
-    } catch (err: any) {
-      console.error("Error opening widget:", err);
-      setError(err?.message || "Failed to open call widget");
-      toast({
-        title: "Error",
-        description: err?.message || "Failed to open call widget",
-        variant: "destructive",
-      });
-    }
+    toast({
+      title: "Call Started",
+      description: "Initializing voice connection...",
+    });
   };
 
   return (
@@ -119,6 +101,12 @@ const Call = () => {
       <header className="border-b bg-card shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
+            <Link to="/">
+              <Button variant="ghost">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Home
+              </Button>
+            </Link>
             <div>
               <h1 className="text-2xl font-bold text-foreground">AI Voice Agent</h1>
               <p className="text-sm text-muted-foreground">
@@ -128,6 +116,15 @@ const Call = () => {
           </div>
         </div>
       </header>
+
+      {/* ElevenLabs Widget Container */}
+      {showWidget && (
+        <div ref={widgetContainerRef} className="fixed inset-0 z-50">
+          <elevenlabs-convai
+            agent-id={import.meta.env.VITE_ELEVENLABS_AGENT_ID}
+          ></elevenlabs-convai>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
