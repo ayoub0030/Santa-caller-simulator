@@ -70,7 +70,7 @@ const Dashboard = () => {
       setTodaysArrivals(checkIns?.map(r => ({
         name: r.guests?.name || 'Unknown',
         room: r.rooms?.room_number || 'N/A',
-        time: r.check_in_time || '2:00 PM', // Default to 2:00 PM if not specified
+        time: '2:00 PM', // Default check-in time
       })) || []);
 
     } catch (error: any) {
