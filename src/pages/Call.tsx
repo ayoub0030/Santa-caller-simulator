@@ -65,6 +65,17 @@ const Call = () => {
     };
   }, [isCalling]);
 
+  // Hide widget after 5 seconds and show phone UI
+  useEffect(() => {
+    if (showWidget && isCalling) {
+      const timer = setTimeout(() => {
+        setShowWidget(false);
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [showWidget, isCalling]);
+
   // Listen for agent messages and process reservation JSON
   useEffect(() => {
     const handleMessage = async (event: MessageEvent) => {
