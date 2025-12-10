@@ -217,25 +217,18 @@ const Call = () => {
   };
 
   const endCall = () => {
-    // Send message to ElevenLabs widget to end the call
-    if (widgetContainerRef.current) {
-      const iframe = widgetContainerRef.current.querySelector('iframe');
-      if (iframe) {
-        iframe.style.display = 'none';
-      }
-    }
-
-    // Try to find and close the widget element
-    const widgetElement = document.querySelector('elevenlabs-convai');
-    if (widgetElement) {
-      (widgetElement as any).endSession?.();
-    }
-
-    // Update state
-    setIsCalling(false);
+    console.log("End call clicked");
+    
+    // Hide the widget immediately
     setShowWidget(false);
+    
+    // Stop the call
+    setIsCalling(false);
+    
+    // Show the call ended screen
     setCallEnded(true);
     
+    // Show toast
     toast({
       title: "Call Ended",
       description: "Call has been disconnected",
@@ -252,7 +245,7 @@ const Call = () => {
   if (isCalling) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center p-4">
-        {/* ElevenLabs Widget */}
+        {/* ElevenLabs Widget - Hidden after 10 seconds */}
         {showWidget && (
           <div ref={widgetContainerRef} className="fixed inset-0 z-50">
             <elevenlabs-convai
@@ -261,72 +254,70 @@ const Call = () => {
           </div>
         )}
 
-        {/* Phone Call UI - Only show if widget not active */}
-        {!showWidget && (
-          <div className="w-full max-w-sm">
-            <Card className="bg-slate-800 border-slate-700 shadow-2xl">
-              <CardContent className="pt-8 pb-8 text-center space-y-8">
-                {/* Agent Avatar */}
-                <div className="flex justify-center">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg">
-                    <Phone className="w-12 h-12 text-white" />
-                  </div>
+        {/* Phone Call UI - Always show during call */}
+        <div className="w-full max-w-sm">
+          <Card className="bg-slate-800 border-slate-700 shadow-2xl">
+            <CardContent className="pt-8 pb-8 text-center space-y-8">
+              {/* Agent Avatar */}
+              <div className="flex justify-center">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg">
+                  <Phone className="w-12 h-12 text-white" />
                 </div>
+              </div>
 
-                {/* Agent Name */}
-                <div>
-                  <h2 className="text-2xl font-bold text-white">HotelHub Agent</h2>
-                  <p className="text-sm text-slate-400 mt-1">AI Voice Assistant</p>
-                </div>
+              {/* Agent Name */}
+              <div>
+                <h2 className="text-2xl font-bold text-white">HotelHub Agent</h2>
+                <p className="text-sm text-slate-400 mt-1">AI Voice Assistant</p>
+              </div>
 
-                {/* Call Duration */}
-                <div className="text-4xl font-mono font-bold text-green-400">
-                  {formatTime(callDuration)}
-                </div>
+              {/* Call Duration */}
+              <div className="text-4xl font-mono font-bold text-green-400">
+                {formatTime(callDuration)}
+              </div>
 
-                {/* Phone Number */}
-                <div className="bg-slate-700 rounded-lg p-4">
-                  <p className="text-xs text-slate-400 mb-2">Calling</p>
-                  <p className="text-2xl font-bold text-white tracking-wider">
-                    +212 (0) 5 24 43 93 23
-                  </p>
-                  <p className="text-xs text-slate-400 mt-2">Morocco</p>
-                </div>
-
-                {/* Call Controls */}
-                <div className="flex justify-center gap-4 pt-4">
-                  {/* Mute Button */}
-                  <Button
-                    onClick={() => setIsMuted(!isMuted)}
-                    variant="outline"
-                    size="lg"
-                    className="rounded-full w-16 h-16 p-0 bg-slate-700 border-slate-600 hover:bg-slate-600"
-                  >
-                    {isMuted ? (
-                      <MicOff className="w-6 h-6 text-red-400" />
-                    ) : (
-                      <Mic className="w-6 h-6 text-white" />
-                    )}
-                  </Button>
-
-                  {/* End Call Button */}
-                  <Button
-                    onClick={endCall}
-                    size="lg"
-                    className="rounded-full w-16 h-16 p-0 bg-red-600 hover:bg-red-700"
-                  >
-                    <PhoneOff className="w-6 h-6 text-white" />
-                  </Button>
-                </div>
-
-                {/* Status */}
-                <p className="text-sm text-slate-400">
-                  {isMuted ? "🔴 Muted" : "🟢 Connected"}
+              {/* Phone Number */}
+              <div className="bg-slate-700 rounded-lg p-4">
+                <p className="text-xs text-slate-400 mb-2">Calling</p>
+                <p className="text-2xl font-bold text-white tracking-wider">
+                  +212 (0) 5 24 43 93 23
                 </p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                <p className="text-xs text-slate-400 mt-2">Morocco</p>
+              </div>
+
+              {/* Call Controls */}
+              <div className="flex justify-center gap-4 pt-4">
+                {/* Mute Button */}
+                <Button
+                  onClick={() => setIsMuted(!isMuted)}
+                  variant="outline"
+                  size="lg"
+                  className="rounded-full w-16 h-16 p-0 bg-slate-700 border-slate-600 hover:bg-slate-600"
+                >
+                  {isMuted ? (
+                    <MicOff className="w-6 h-6 text-red-400" />
+                  ) : (
+                    <Mic className="w-6 h-6 text-white" />
+                  )}
+                </Button>
+
+                {/* End Call Button */}
+                <Button
+                  onClick={endCall}
+                  size="lg"
+                  className="rounded-full w-16 h-16 p-0 bg-red-600 hover:bg-red-700"
+                >
+                  <PhoneOff className="w-6 h-6 text-white" />
+                </Button>
+              </div>
+
+              {/* Status */}
+              <p className="text-sm text-slate-400">
+                {isMuted ? "🔴 Muted" : "🟢 Connected"}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
