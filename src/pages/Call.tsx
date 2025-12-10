@@ -1,11 +1,12 @@
 import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Phone, Loader2, AlertCircle, ArrowLeft } from "lucide-react";
+import { Phone, Loader2, AlertCircle, ArrowLeft, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { createReservationFromAgent } from "@/lib/reservationHandler";
 
 interface HotelData {
   hotelName: string;
@@ -30,6 +31,8 @@ const Call = () => {
   const [hotelData, setHotelData] = useState<HotelData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showWidget, setShowWidget] = useState(false);
+  const [reservationSuccess, setReservationSuccess] = useState(false);
+  const [reservationId, setReservationId] = useState<string | null>(null);
   const widgetContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -37,6 +40,70 @@ const Call = () => {
   useEffect(() => {
     fetchHotelData();
   }, []);
+
+  // Listen for agent messages and process reservation JSON
+  useEffect(() => {
+    const handleMessage = async (event: MessageEvent) => {
+      try {
+        // Check if message contains reservation data from the agent
+        if (event.data?.type === "agent_message" || event.data?.reservation) {
+          const messageData = event.data;
+          
+          // Try to extract reservation JSON from the message
+          let reservationData = messageData.reservation;
+          
+          // If not directly in reservation field, try to parse from text
+          if (!reservationData && messageData.text) {
+            const jsonMatch = messageData.text.match(/\{[\s\S]*"reservation"[\s\S]*\}/);
+            if (jsonMatch) {
+              try {
+                const parsed = JSON.parse(jsonMatch[0]);
+                reservationData = parsed.reservation;
+              } catch (e) {
+                console.log("Could not parse JSON from message");
+              }
+            }
+          }
+
+          // If we found reservation data, save it
+          if (reservationData) {
+            console.log("Reservation data received:", reservationData);
+            
+            const result = await createReservationFromAgent({
+              guestName: reservationData.guestName,
+              guestEmail: reservationData.guestEmail,
+              guestPhone: reservationData.guestPhone,
+              roomId: reservationData.roomId,
+              checkInDate: reservationData.checkInDate,
+              checkOutDate: reservationData.checkOutDate,
+              specialRequests: reservationData.specialRequests,
+              totalAmount: reservationData.totalAmount,
+            });
+
+            if (result.success) {
+              setReservationSuccess(true);
+              setReservationId(result.reservationId || null);
+              toast({
+                title: "Reservation Confirmed! ✅",
+                description: `Reservation ID: ${result.reservationId}`,
+              });
+            } else {
+              toast({
+                title: "Reservation Error",
+                description: result.error || "Failed to create reservation",
+                variant: "destructive",
+              });
+            }
+          }
+        }
+      } catch (err: any) {
+        console.error("Error processing agent message:", err);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [toast]);
 
   const fetchHotelData = async () => {
     try {
@@ -138,8 +205,18 @@ const Call = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Success Alert */}
+              {reservationSuccess && (
+                <Alert className="border-green-200 bg-green-50 dark:bg-green-950">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-800 dark:text-green-100">
+                    ✅ Reservation created successfully! ID: {reservationId}
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {/* Error Alert */}
-              {error && (
+              {error && !reservationSuccess && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>{error}</AlertDescription>
