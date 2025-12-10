@@ -46,6 +46,18 @@ const Call = () => {
     fetchHotelData();
   }, []);
 
+  // Handle Escape key to end call
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isCalling) {
+        endCall();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCalling]);
+
   // Call duration timer
   useEffect(() => {
     if (isCalling) {
@@ -70,7 +82,7 @@ const Call = () => {
     if (showWidget && isCalling) {
       const timer = setTimeout(() => {
         setShowWidget(false);
-      }, 5000);
+      }, 10000);
 
       return () => clearTimeout(timer);
     }
@@ -205,9 +217,29 @@ const Call = () => {
   };
 
   const endCall = () => {
+    // Send message to ElevenLabs widget to end the call
+    if (widgetContainerRef.current) {
+      const iframe = widgetContainerRef.current.querySelector('iframe');
+      if (iframe) {
+        iframe.style.display = 'none';
+      }
+    }
+
+    // Try to find and close the widget element
+    const widgetElement = document.querySelector('elevenlabs-convai');
+    if (widgetElement) {
+      (widgetElement as any).endSession?.();
+    }
+
+    // Update state
     setIsCalling(false);
     setShowWidget(false);
     setCallEnded(true);
+    
+    toast({
+      title: "Call Ended",
+      description: "Call has been disconnected",
+    });
   };
 
   const formatTime = (seconds: number) => {
