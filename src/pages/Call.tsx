@@ -209,79 +209,81 @@ const Call = () => {
   if (isCalling) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center p-4">
-        {/* Hidden ElevenLabs Widget */}
+        {/* ElevenLabs Widget */}
         {showWidget && (
-          <div ref={widgetContainerRef} className="hidden">
+          <div ref={widgetContainerRef} className="fixed inset-0 z-50">
             <elevenlabs-convai
               agent-id={import.meta.env.VITE_ELEVENLABS_AGENT_ID}
             ></elevenlabs-convai>
           </div>
         )}
 
-        {/* Phone Call UI */}
-        <div className="w-full max-w-sm">
-          <Card className="bg-slate-800 border-slate-700 shadow-2xl">
-            <CardContent className="pt-8 pb-8 text-center space-y-8">
-              {/* Agent Avatar */}
-              <div className="flex justify-center">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg">
-                  <Phone className="w-12 h-12 text-white" />
+        {/* Phone Call UI - Only show if widget not active */}
+        {!showWidget && (
+          <div className="w-full max-w-sm">
+            <Card className="bg-slate-800 border-slate-700 shadow-2xl">
+              <CardContent className="pt-8 pb-8 text-center space-y-8">
+                {/* Agent Avatar */}
+                <div className="flex justify-center">
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg">
+                    <Phone className="w-12 h-12 text-white" />
+                  </div>
                 </div>
-              </div>
 
-              {/* Agent Name */}
-              <div>
-                <h2 className="text-2xl font-bold text-white">HotelHub Agent</h2>
-                <p className="text-sm text-slate-400 mt-1">AI Voice Assistant</p>
-              </div>
+                {/* Agent Name */}
+                <div>
+                  <h2 className="text-2xl font-bold text-white">HotelHub Agent</h2>
+                  <p className="text-sm text-slate-400 mt-1">AI Voice Assistant</p>
+                </div>
 
-              {/* Call Duration */}
-              <div className="text-4xl font-mono font-bold text-green-400">
-                {formatTime(callDuration)}
-              </div>
+                {/* Call Duration */}
+                <div className="text-4xl font-mono font-bold text-green-400">
+                  {formatTime(callDuration)}
+                </div>
 
-              {/* Phone Number */}
-              <div className="bg-slate-700 rounded-lg p-4">
-                <p className="text-xs text-slate-400 mb-2">Calling</p>
-                <p className="text-2xl font-bold text-white tracking-wider">
-                  +212 (0) 5 24 43 93 23
+                {/* Phone Number */}
+                <div className="bg-slate-700 rounded-lg p-4">
+                  <p className="text-xs text-slate-400 mb-2">Calling</p>
+                  <p className="text-2xl font-bold text-white tracking-wider">
+                    +212 (0) 5 24 43 93 23
+                  </p>
+                  <p className="text-xs text-slate-400 mt-2">Morocco</p>
+                </div>
+
+                {/* Call Controls */}
+                <div className="flex justify-center gap-4 pt-4">
+                  {/* Mute Button */}
+                  <Button
+                    onClick={() => setIsMuted(!isMuted)}
+                    variant="outline"
+                    size="lg"
+                    className="rounded-full w-16 h-16 p-0 bg-slate-700 border-slate-600 hover:bg-slate-600"
+                  >
+                    {isMuted ? (
+                      <MicOff className="w-6 h-6 text-red-400" />
+                    ) : (
+                      <Mic className="w-6 h-6 text-white" />
+                    )}
+                  </Button>
+
+                  {/* End Call Button */}
+                  <Button
+                    onClick={endCall}
+                    size="lg"
+                    className="rounded-full w-16 h-16 p-0 bg-red-600 hover:bg-red-700"
+                  >
+                    <PhoneOff className="w-6 h-6 text-white" />
+                  </Button>
+                </div>
+
+                {/* Status */}
+                <p className="text-sm text-slate-400">
+                  {isMuted ? "🔴 Muted" : "🟢 Connected"}
                 </p>
-                <p className="text-xs text-slate-400 mt-2">Morocco</p>
-              </div>
-
-              {/* Call Controls */}
-              <div className="flex justify-center gap-4 pt-4">
-                {/* Mute Button */}
-                <Button
-                  onClick={() => setIsMuted(!isMuted)}
-                  variant="outline"
-                  size="lg"
-                  className="rounded-full w-16 h-16 p-0 bg-slate-700 border-slate-600 hover:bg-slate-600"
-                >
-                  {isMuted ? (
-                    <MicOff className="w-6 h-6 text-red-400" />
-                  ) : (
-                    <Mic className="w-6 h-6 text-white" />
-                  )}
-                </Button>
-
-                {/* End Call Button */}
-                <Button
-                  onClick={endCall}
-                  size="lg"
-                  className="rounded-full w-16 h-16 p-0 bg-red-600 hover:bg-red-700"
-                >
-                  <PhoneOff className="w-6 h-6 text-white" />
-                </Button>
-              </div>
-
-              {/* Status */}
-              <p className="text-sm text-slate-400">
-                {isMuted ? "🔴 Muted" : "🟢 Connected"}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     );
   }
@@ -289,216 +291,112 @@ const Call = () => {
   // If call ended, show summary
   if (callEnded) {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="border-b bg-card shadow-sm">
-          <div className="container mx-auto px-4 py-4">
-            <Link to="/">
-              <Button variant="ghost">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Home
-              </Button>
-            </Link>
-          </div>
-        </header>
-
-        <main className="container mx-auto px-4 py-12 flex items-center justify-center min-h-[calc(100vh-80px)]">
-          <Card className="w-full max-w-md">
-            <CardContent className="pt-8 pb-8 text-center space-y-6">
-              <CheckCircle className="w-16 h-16 text-green-600 mx-auto" />
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm">
+          <Card className="bg-slate-800 border-slate-700 shadow-2xl">
+            <CardContent className="pt-12 pb-12 text-center space-y-8">
+              <CheckCircle className="w-20 h-20 text-green-400 mx-auto" />
 
               <div>
-                <h2 className="text-2xl font-bold">Call Ended</h2>
-                <p className="text-sm text-muted-foreground mt-2">
+                <h2 className="text-2xl font-bold text-white">Call Ended</h2>
+                <p className="text-sm text-slate-400 mt-2">
                   Duration: {formatTime(callDuration)}
                 </p>
               </div>
 
               {reservationSuccess && (
-                <Alert className="border-green-200 bg-green-50 dark:bg-green-950">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-800 dark:text-green-100">
-                    ✅ Reservation created! ID: {reservationId}
-                  </AlertDescription>
-                </Alert>
+                <div className="bg-green-900 border border-green-700 rounded-lg p-4">
+                  <p className="text-green-100 text-sm">
+                    ✅ Reservation created!
+                  </p>
+                  <p className="text-green-200 text-xs mt-1">
+                    ID: {reservationId}
+                  </p>
+                </div>
               )}
 
               {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
+                <div className="bg-red-900 border border-red-700 rounded-lg p-4">
+                  <p className="text-red-100 text-sm">{error}</p>
+                </div>
               )}
 
               <Button
                 onClick={() => {
                   setCallEnded(false);
                   setCallDuration(0);
+                  setReservationSuccess(false);
+                  setReservationId(null);
+                  setError(null);
                 }}
-                className="w-full"
+                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 h-12 text-base"
               >
                 Make Another Call
               </Button>
-
-              <Link to="/" className="block">
-                <Button variant="outline" className="w-full">
-                  Back to Home
-                </Button>
-              </Link>
             </CardContent>
           </Card>
-        </main>
+        </div>
       </div>
     );
   }
 
-  // Default view - before call
+  // Default view - before call (full-screen phone UI)
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link to="/">
-              <Button variant="ghost">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Home
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">AI Voice Agent</h1>
-              <p className="text-sm text-muted-foreground">
-                Call our AI assistant to check availability and make reservations
-              </p>
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        <Card className="bg-slate-800 border-slate-700 shadow-2xl">
+          <CardContent className="pt-12 pb-12 text-center space-y-12">
+            {/* Agent Avatar */}
+            <div className="flex justify-center">
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg">
+                <Phone className="w-16 h-16 text-white" />
+              </div>
             </div>
-          </div>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-6">
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Call Interface */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Start a Call</CardTitle>
-              <CardDescription>
-                Speak with our AI agent to book a room
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Error Alert */}
-              {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
+            {/* Agent Name */}
+            <div>
+              <h2 className="text-3xl font-bold text-white">HotelHub</h2>
+              <p className="text-sm text-slate-400 mt-2">AI Reservation Agent</p>
+            </div>
 
-              {/* Call Button */}
-              <Button
-                onClick={startCall}
-                disabled={isLoading || !hotelData}
-                className="w-full bg-status-available hover:bg-status-available/90 h-12 text-base"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  <>
-                    <Phone className="mr-2 h-4 w-4" />
-                    Start Call
-                  </>
-                )}
-              </Button>
-
-              {/* Phone Number Display */}
-              <div className="bg-slate-100 dark:bg-slate-900 rounded-lg p-4 text-center">
-                <p className="text-xs text-muted-foreground mb-2">Call this number:</p>
-                <p className="text-xl font-bold text-foreground">+212 (0) 5 24 43 93 23</p>
-                <p className="text-xs text-muted-foreground mt-1">Morocco</p>
-              </div>
-
-              {/* Info */}
-              <div className="rounded-lg bg-blue-50 dark:bg-blue-950 p-4 text-sm">
-                <p className="text-blue-900 dark:text-blue-100">
-                  💡 <strong>Tip:</strong> Tell the agent which room type you're interested in,
-                  your check-in and check-out dates, and any special requests.
+            {/* Phone Number - Clickable */}
+            <Button
+              onClick={startCall}
+              disabled={isLoading}
+              className="w-full h-auto p-6 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-2xl shadow-lg"
+            >
+              <div className="text-center">
+                <p className="text-xs text-green-100 mb-2">Call this number</p>
+                <p className="text-4xl font-bold text-white tracking-wider font-mono">
+                  +212 (0) 5 24 43 93 23
                 </p>
+                <p className="text-xs text-green-100 mt-2">Morocco</p>
               </div>
-            </CardContent>
-          </Card>
+            </Button>
 
-          {/* Hotel Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Available Rooms</CardTitle>
-              <CardDescription>
-                Rooms the agent can help you book
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {hotelData ? (
-                <div className="space-y-3">
-                  {hotelData.rooms.length > 0 ? (
-                    hotelData.rooms.map((room) => (
-                      <div
-                        key={room.id}
-                        className="rounded-lg border p-3 hover:bg-muted/50 transition"
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="font-medium">Room {room.room_number}</p>
-                          <p className="text-sm font-semibold text-primary">
-                            ${room.price_per_night}/night
-                          </p>
-                        </div>
-                        <p className="text-sm text-muted-foreground capitalize">
-                          {room.room_type}
-                        </p>
-                        {room.description && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {room.description}
-                          </p>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-center text-muted-foreground py-4">
-                      No rooms available at the moment
-                    </p>
-                  )}
+            {/* Loading State */}
+            {isLoading && (
+              <div className="flex items-center justify-center gap-2 text-slate-400">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span className="text-sm">Connecting...</span>
+              </div>
+            )}
 
-                  {/* Hotel Policies */}
-                  <div className="mt-6 pt-4 border-t">
-                    <p className="font-semibold text-sm mb-2">Hotel Policies</p>
-                    <ul className="text-xs text-muted-foreground space-y-1">
-                      <li>
-                        <strong>Check-in:</strong> {hotelData.checkInTime}
-                      </li>
-                      <li>
-                        <strong>Check-out:</strong> {hotelData.checkOutTime}
-                      </li>
-                      <li>
-                        <strong>Cancellation:</strong>{" "}
-                        {hotelData.policies.cancellationDeadline}
-                      </li>
-                      <li>
-                        <strong>Min Stay:</strong> {hotelData.policies.minStay} night(s)
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">Loading hotel data...</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+            {/* Error Alert */}
+            {error && (
+              <Alert variant="destructive" className="bg-red-900 border-red-700">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-red-100">{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {/* Info Text */}
+            <p className="text-xs text-slate-400 px-4">
+              Tap the number above to start a voice call with our AI assistant
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
