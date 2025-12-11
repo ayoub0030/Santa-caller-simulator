@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { X, Upload } from "lucide-react";
 
 interface AddRoomDialogProps {
   open: boolean;
@@ -20,7 +21,27 @@ export const AddRoomDialog = ({ open, onOpenChange, onSuccess }: AddRoomDialogPr
   const [roomType, setRoomType] = useState<'standard' | 'deluxe' | 'suite'>('standard');
   const [pricePerNight, setPricePerNight] = useState("");
   const [description, setDescription] = useState("");
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
   const { toast } = useToast();
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setPhotos([...photos, ...files]);
+    
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreviewUrls((prev) => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+    setPhotoPreviewUrls((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +68,7 @@ export const AddRoomDialog = ({ open, onOpenChange, onSuccess }: AddRoomDialogPr
     setLoading(true);
 
     try {
-      const { error } = await supabase
+      const { data: roomData, error: roomError } = await supabase
         .from('rooms')
         .insert({
           room_number: roomNumber,
@@ -55,13 +76,43 @@ export const AddRoomDialog = ({ open, onOpenChange, onSuccess }: AddRoomDialogPr
           price_per_night: price,
           description: description || null,
           status: 'available',
-        });
+        })
+        .select();
 
-      if (error) throw error;
+      if (roomError) throw roomError;
+
+      const roomId = roomData?.[0]?.id;
+
+      if (photos.length > 0 && roomId) {
+        for (let i = 0; i < photos.length; i++) {
+          const file = photos[i];
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${roomId}-${Date.now()}-${i}.${fileExt}`;
+          const filePath = `room-photos/${fileName}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('room-photos')
+            .upload(filePath, file);
+
+          if (uploadError) throw uploadError;
+
+          const { data: publicUrlData } = supabase.storage
+            .from('room-photos')
+            .getPublicUrl(filePath);
+
+          await supabase
+            .from('room_photos')
+            .insert({
+              room_id: roomId,
+              photo_url: publicUrlData.publicUrl,
+              file_path: filePath,
+            });
+        }
+      }
 
       toast({
         title: "Room added",
-        description: "The room has been successfully added",
+        description: "The room has been successfully added with photos",
       });
 
       onOpenChange(false);
@@ -83,6 +134,8 @@ export const AddRoomDialog = ({ open, onOpenChange, onSuccess }: AddRoomDialogPr
     setRoomType('standard');
     setPricePerNight("");
     setDescription("");
+    setPhotos([]);
+    setPhotoPreviewUrls([]);
   };
 
   return (
@@ -94,7 +147,7 @@ export const AddRoomDialog = ({ open, onOpenChange, onSuccess }: AddRoomDialogPr
             Add a new room to the property
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto">
           <div className="space-y-2">
             <Label htmlFor="roomNumber">Room Number *</Label>
             <Input
@@ -144,6 +197,48 @@ export const AddRoomDialog = ({ open, onOpenChange, onSuccess }: AddRoomDialogPr
               rows={3}
             />
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="photos">Room Photos</Label>
+            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4">
+              <input
+                id="photos"
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handlePhotoSelect}
+                className="hidden"
+              />
+              <label htmlFor="photos" className="cursor-pointer flex flex-col items-center gap-2">
+                <Upload className="h-6 w-6 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Click to upload photos</span>
+              </label>
+            </div>
+          </div>
+
+          {photoPreviewUrls.length > 0 && (
+            <div className="space-y-2">
+              <Label>Photo Preview ({photoPreviewUrls.length})</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {photoPreviewUrls.map((url, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={url}
+                      alt={`Preview ${index + 1}`}
+                      className="w-full h-24 object-cover rounded-md"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(index)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

@@ -6,11 +6,14 @@ import { BedDouble, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AddRoomDialog } from "./AddRoomDialog";
+import { RoomDetailsDialog } from "./RoomDetailsDialog";
 
 const RoomGrid = () => {
   const [rooms, setRooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -68,6 +71,12 @@ const RoomGrid = () => {
         onOpenChange={setShowAddDialog}
         onSuccess={fetchRooms}
       />
+      <RoomDetailsDialog
+        open={showDetailsDialog}
+        onOpenChange={setShowDetailsDialog}
+        roomId={selectedRoomId}
+        onPhotoAdded={fetchRooms}
+      />
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Room Management</h2>
@@ -106,7 +115,10 @@ const RoomGrid = () => {
                 variant="outline" 
                 size="sm" 
                 className="w-full"
-                disabled={room.status === "maintenance"}
+                onClick={() => {
+                  setSelectedRoomId(room.id);
+                  setShowDetailsDialog(true);
+                }}
               >
                 View Details
               </Button>

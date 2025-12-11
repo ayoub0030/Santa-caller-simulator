@@ -31,6 +31,7 @@ const Call = () => {
   const [hotelData, setHotelData] = useState<HotelData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showWidget, setShowWidget] = useState(false);
+  const [widgetHidden, setWidgetHidden] = useState(false);
   const [isCalling, setIsCalling] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
@@ -77,25 +78,30 @@ const Call = () => {
     };
   }, [isCalling]);
 
-  // Hide widget after 5 seconds and show phone UI
+  // Visually hide widget after 10 seconds but keep call active
   useEffect(() => {
-    if (showWidget && isCalling) {
+    if (isCalling) {
       const timer = setTimeout(() => {
-        setShowWidget(false);
+        setWidgetHidden(true);
       }, 10000);
 
       return () => clearTimeout(timer);
+    } else {
+      // Reset for next call
+      setWidgetHidden(false);
     }
-  }, [showWidget, isCalling]);
+  }, [isCalling]);
 
   // Listen for agent messages and process reservation JSON
   useEffect(() => {
     const handleMessage = async (event: MessageEvent) => {
       try {
-        // Detect call end
-        if (event.data?.type === "call_ended" || event.data?.status === "ended") {
+        // Detect call end ONLY on explicit call_ended message
+        if (event.data?.type === "call_ended") {
+          console.log("ElevenLabs call_ended message", event.data);
           setIsCalling(false);
           setShowWidget(false);
+          setWidgetHidden(false);
           setCallEnded(true);
           return;
         }
@@ -209,6 +215,7 @@ const Call = () => {
 
     // Start the call - show widget in background, show custom UI
     setShowWidget(true);
+    setWidgetHidden(false);
     setIsCalling(true);
     setCallDuration(0);
     setCallEnded(false);
@@ -218,16 +225,15 @@ const Call = () => {
 
   const endCall = () => {
     console.log("End call clicked");
-    
-    // Hide the widget immediately
-    setShowWidget(false);
-    
-    // Stop the call
+
+    // Stop the call and widget
     setIsCalling(false);
-    
+    setShowWidget(false);
+    setWidgetHidden(false);
+
     // Show the call ended screen
     setCallEnded(true);
-    
+
     // Show toast
     toast({
       title: "Call Ended",
@@ -245,9 +251,14 @@ const Call = () => {
   if (isCalling) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center p-4">
-        {/* ElevenLabs Widget - Hidden after 10 seconds */}
+        {/* ElevenLabs Widget - fades out after 10 seconds but stays mounted */}
         {showWidget && (
-          <div ref={widgetContainerRef} className="fixed inset-0 z-50">
+          <div
+            ref={widgetContainerRef}
+            className={`fixed inset-0 z-50 transition-opacity duration-500 ${
+              widgetHidden ? "opacity-0 pointer-events-none" : "opacity-100"
+            }`}
+          >
             <elevenlabs-convai
               agent-id={import.meta.env.VITE_ELEVENLABS_AGENT_ID}
             ></elevenlabs-convai>
@@ -280,7 +291,7 @@ const Call = () => {
               <div className="bg-slate-700 rounded-lg p-4">
                 <p className="text-xs text-slate-400 mb-2">Calling</p>
                 <p className="text-2xl font-bold text-white tracking-wider">
-                  +212 (0) 5 24 43 93 23
+                  +212 5 24 43 93 23
                 </p>
                 <p className="text-xs text-slate-400 mt-2">Morocco</p>
               </div>
@@ -401,10 +412,9 @@ const Call = () => {
             >
               <div className="text-center">
                 <p className="text-xs text-green-100 mb-2">Call this number</p>
-                <p className="text-4xl font-bold text-white tracking-wider font-mono">
-                  +212 (0) 5 24 43 93 23
+                <p className="text-2xl font-bold text-white tracking-wider font-mono">
+                  +212 5 24 43 93 23
                 </p>
-                <p className="text-xs text-green-100 mt-2">Morocco</p>
               </div>
             </Button>
 
@@ -425,8 +435,7 @@ const Call = () => {
             )}
 
             {/* Info Text */}
-            <p className="text-xs text-slate-400 px-4">
-              Tap the number above to start a voice call with our AI assistant
+            <p className="text-xs text-slate-400 px-4">.
             </p>
           </CardContent>
         </Card>
