@@ -8,16 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { createReservationFromAgent } from "@/lib/reservationHandler";
 
-interface HotelData {
-  hotelName: string;
-  rooms: Array<{
-    id: string;
-    room_number: string;
-    room_type: string;
-    price_per_night: number;
-    status: string;
-    description?: string;
-  }>;
   checkInTime: string;
   checkOutTime: string;
   policies: {
