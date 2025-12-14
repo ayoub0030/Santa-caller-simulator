@@ -88,11 +88,11 @@ export const AddRoomDialog = ({ open, onOpenChange, onSuccess }: AddRoomDialogPr
           const file = photos[i];
           const fileExt = file.name.split('.').pop();
           const fileName = `${roomId}-${Date.now()}-${i}.${fileExt}`;
-          const filePath = `room-photos/${fileName}`;
+          const filePath = `rooms/${roomId}/${fileName}`;
 
           const { error: uploadError } = await supabase.storage
             .from('room-photos')
-            .upload(filePath, file);
+            .upload(filePath, file, { contentType: file.type, upsert: false });
 
           if (uploadError) throw uploadError;
 
