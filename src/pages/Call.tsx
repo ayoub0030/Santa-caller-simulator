@@ -18,11 +18,14 @@ export const Appelle = () => {
   const [callDuration, setCallDuration] = useState(0);
   const [reservationSuccess, setReservationSuccess] = useState(false);
   const [reservationId, setReservationId] = useState<string | null>(null);
+  const [isCalling, setIsCalling] = useState(false);
   const { toast } = useToast();
 
   const conversation = useConversation({
     onConnect: () => {
       console.log("Connected to ElevenLabs agent");
+      setError(null);
+      setIsCalling(true);
       toast({
         title: "Connected",
         description: "Voice connection established",
@@ -30,9 +33,10 @@ export const Appelle = () => {
     },
     onDisconnect: () => {
       console.log("Disconnected from ElevenLabs agent");
+      setIsCalling(false);
       setCallEnded(true);
     },
-    onMessage: async (message) => {
+    onMessage: async (message: any) => {
       console.log("Message received:", message);
       
       if (message.source === "agent" && message.message) {
@@ -79,36 +83,52 @@ export const Appelle = () => {
         }
       }
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Conversation error:", error);
-      setError(error?.message || "An error occurred");
+      const errorMsg = error?.message || error?.toString?.() || "Connection failed";
+      setError(errorMsg);
       toast({
-        title: "Error",
-        description: error?.message || "An error occurred",
+        title: "Connection Error",
+        description: errorMsg,
         variant: "destructive",
       });
+    },
+    onStatusChange: (status: any) => {
+      console.log("Conversation status changed:", status);
+    },
+    onDebug: (event: any) => {
+      console.debug("Debug event:", event);
     },
   });
 
   useEffect(() => {
-    if (conversation.status === "connected") {
+    console.log("Call state effect triggered:", { isCalling, conversationStatus: conversation.status });
+    if (isCalling) {
+      console.log("Starting call duration timer");
       const timer = setInterval(() => {
         setCallDuration((prev) => prev + 1);
       }, 1000);
 
-      return () => clearInterval(timer);
+      return () => {
+        console.log("Clearing call duration timer");
+        clearInterval(timer);
+      };
     } else {
       setCallDuration(0);
     }
-  }, [conversation.status]);
+  }, [isCalling]);
 
   useEffect(() => {
     const requestMicrophoneAccess = async () => {
       try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-      } catch (err) {
+        console.log("Requesting microphone access...");
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log("Microphone access granted");
+        // Stop the stream immediately - we just needed to check permissions
+        stream.getTracks().forEach(track => track.stop());
+      } catch (err: any) {
         console.error("Microphone access denied:", err);
-        setError("Microphone access is required for voice calls");
+        setError("Microphone access is required for voice calls. Please allow microphone access in your browser settings.");
       }
     };
 
@@ -124,6 +144,8 @@ export const Appelle = () => {
       setReservationSuccess(false);
 
       const agentId = import.meta.env.VITE_ELEVENLABS_AGENT_ID;
+      const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
+      
       if (!agentId) {
         setError("Missing ElevenLabs Agent ID");
         toast({
@@ -134,12 +156,56 @@ export const Appelle = () => {
         return;
       }
 
-      await conversation.startSession({
-        agentId,
-        connectionType: "webrtc",
+      console.log("Starting call with agent ID:", agentId);
+      console.log("Conversation status before start:", conversation.status);
+      
+      let sessionConfig: any = { agentId };
+      
+      // If API key is available, fetch a conversation token for better reliability
+      if (apiKey) {
+        try {
+          console.log("Fetching conversation token...");
+          const tokenResponse = await fetch(
+            `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${agentId}`,
+            {
+              headers: {
+                "xi-api-key": apiKey,
+              },
+            }
+          );
+
+          if (tokenResponse.ok) {
+            const tokenData = await tokenResponse.json();
+            sessionConfig = {
+              conversationToken: tokenData.token,
+            };
+            console.log("Conversation token obtained");
+          } else {
+            console.warn("Failed to get conversation token, falling back to agent ID");
+          }
+        } catch (tokenErr) {
+          console.warn("Error fetching conversation token:", tokenErr);
+          // Fall back to agent ID
+        }
+      }
+      
+      console.log("Starting session with config:", sessionConfig);
+      const conversationId = await conversation.startSession(sessionConfig);
+      
+      console.log("Conversation started with ID:", conversationId);
+      console.log("Conversation status after start:", conversation.status);
+      console.log("Conversation object:", {
+        status: conversation.status,
+        micMuted: conversation.micMuted,
+        isSpeaking: conversation.isSpeaking,
       });
     } catch (err: any) {
       console.error("Error starting call:", err);
+      console.error("Error details:", {
+        message: err?.message,
+        code: err?.code,
+        toString: err?.toString?.(),
+      });
       setError(err?.message || "Failed to start call");
       toast({
         title: "Error",
@@ -175,7 +241,7 @@ export const Appelle = () => {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  if (conversation.status === "connected") {
+  if (isCalling) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center p-4">
         <div className="w-full max-w-sm">
@@ -198,8 +264,8 @@ export const Appelle = () => {
 
               <div className="bg-slate-700 rounded-lg p-4">
                 <p className="text-xs text-slate-400 mb-2">Calling</p>
-                <p className="text-2xl font-bold text-white tracking-wider">
-                  +212 (0) 5 24 43 93 23
+                <p className="text-xl font-bold text-white tracking-wider">
+                  +212 5 24 43 93 23
                 </p>
                 <p className="text-xs text-slate-400 mt-2">Morocco</p>
               </div>
@@ -311,8 +377,8 @@ export const Appelle = () => {
             >
               <div className="text-center">
                 <p className="text-xs text-green-100 mb-2">Call this number</p>
-                <p className="text-4xl font-bold text-white tracking-wider font-mono">
-                  +212 (0) 5 24 43 93 23
+                <p className="text-2xl font-bold text-white tracking-wider font-mono">
+                  +212 5 24 43 93 23
                 </p>
                 <p className="text-xs text-green-100 mt-2">Morocco</p>
               </div>
