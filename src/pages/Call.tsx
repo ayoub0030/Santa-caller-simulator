@@ -161,33 +161,8 @@ export const Appelle = () => {
       
       let sessionConfig: any = { agentId };
       
-      // If API key is available, fetch a conversation token for better reliability
-      if (apiKey) {
-        try {
-          console.log("Fetching conversation token...");
-          const tokenResponse = await fetch(
-            `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${agentId}`,
-            {
-              headers: {
-                "xi-api-key": apiKey,
-              },
-            }
-          );
-
-          if (tokenResponse.ok) {
-            const tokenData = await tokenResponse.json();
-            sessionConfig = {
-              conversationToken: tokenData.token,
-            };
-            console.log("Conversation token obtained");
-          } else {
-            console.warn("Failed to get conversation token, falling back to agent ID");
-          }
-        } catch (tokenErr) {
-          console.warn("Error fetching conversation token:", tokenErr);
-          // Fall back to agent ID
-        }
-      }
+      // Try to use agent ID directly first (most reliable for public agents)
+      console.log("Using agent ID directly for connection");
       
       console.log("Starting session with config:", sessionConfig);
       const conversationId = await conversation.startSession(sessionConfig);
