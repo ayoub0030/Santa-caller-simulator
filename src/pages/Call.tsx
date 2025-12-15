@@ -19,6 +19,7 @@ export const Appelle = () => {
   const [reservationSuccess, setReservationSuccess] = useState(false);
   const [reservationId, setReservationId] = useState<string | null>(null);
   const [isCalling, setIsCalling] = useState(false);
+  const [cachedRooms, setCachedRooms] = useState<any[]>([]);
   const { toast } = useToast();
 
   const conversation = useConversation({
@@ -118,7 +119,27 @@ export const Appelle = () => {
     }
   }, [isCalling]);
 
+  // Fetch room data on component mount
   useEffect(() => {
+    const fetchRoomsOnMount = async () => {
+      try {
+        console.log("Fetching room data on component mount...");
+        const { data: rooms, error: roomsError } = await supabase
+          .from("rooms")
+          .select("*")
+          .eq("status", "available");
+
+        if (roomsError) {
+          console.warn("Error fetching rooms on mount:", roomsError);
+        } else if (rooms && rooms.length > 0) {
+          console.log("Rooms cached successfully:", rooms);
+          setCachedRooms(rooms);
+        }
+      } catch (err) {
+        console.error("Error fetching rooms on mount:", err);
+      }
+    };
+
     const requestMicrophoneAccess = async () => {
       try {
         console.log("Requesting microphone access...");
@@ -132,6 +153,7 @@ export const Appelle = () => {
       }
     };
 
+    fetchRoomsOnMount();
     requestMicrophoneAccess();
   }, []);
 
@@ -144,7 +166,6 @@ export const Appelle = () => {
       setReservationSuccess(false);
 
       const agentId = import.meta.env.VITE_ELEVENLABS_AGENT_ID;
-      const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
       
       if (!agentId) {
         setError("Missing ElevenLabs Agent ID");
@@ -161,9 +182,6 @@ export const Appelle = () => {
       
       let sessionConfig: any = { agentId };
       
-      // Try to use agent ID directly first (most reliable for public agents)
-      console.log("Using agent ID directly for connection");
-      
       console.log("Starting session with config:", sessionConfig);
       const conversationId = await conversation.startSession(sessionConfig);
       
@@ -174,6 +192,18 @@ export const Appelle = () => {
         micMuted: conversation.micMuted,
         isSpeaking: conversation.isSpeaking,
       });
+
+      // Send cached room data as contextual information after connection
+      if (cachedRooms && cachedRooms.length > 0) {
+        const roomsJson = JSON.stringify(cachedRooms);
+        console.log("Room data to send:", roomsJson);
+        
+        const contextMessage = `Available rooms in the hotel: ${roomsJson}. Use this information to help guests find suitable rooms for their stay.`;
+        conversation.sendContextualUpdate(contextMessage);
+        console.log("Contextual room data sent to agent");
+      } else {
+        console.warn("No cached rooms available to send to agent");
+      }
     } catch (err: any) {
       console.error("Error starting call:", err);
       console.error("Error details:", {
