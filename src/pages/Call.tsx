@@ -8,6 +8,340 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { createReservationFromAgent } from "@/lib/reservationHandler";
 
+// Export Appelle component for use in /appelle route
+import { useConversation } from "@elevenlabs/react";
+
+export const Appelle = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [callEnded, setCallEnded] = useState(false);
+  const [callDuration, setCallDuration] = useState(0);
+  const [reservationSuccess, setReservationSuccess] = useState(false);
+  const [reservationId, setReservationId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const conversation = useConversation({
+    onConnect: () => {
+      console.log("Connected to ElevenLabs agent");
+      toast({
+        title: "Connected",
+        description: "Voice connection established",
+      });
+    },
+    onDisconnect: () => {
+      console.log("Disconnected from ElevenLabs agent");
+      setCallEnded(true);
+    },
+    onMessage: async (message) => {
+      console.log("Message received:", message);
+      
+      if (message.source === "agent" && message.message) {
+        const text = message.message;
+        const jsonMatch = text.match(/\{[\s\S]*"reservation"[\s\S]*\}/);
+        
+        if (jsonMatch) {
+          try {
+            const parsed = JSON.parse(jsonMatch[0]);
+            const reservationData = parsed.reservation;
+            
+            if (reservationData) {
+              console.log("Reservation data received:", reservationData);
+              
+              const result = await createReservationFromAgent({
+                guestName: reservationData.guestName,
+                guestEmail: reservationData.guestEmail,
+                guestPhone: reservationData.guestPhone,
+                roomId: reservationData.roomId,
+                checkInDate: reservationData.checkInDate,
+                checkOutDate: reservationData.checkOutDate,
+                specialRequests: reservationData.specialRequests,
+                totalAmount: reservationData.totalAmount,
+              });
+
+              if (result.success) {
+                setReservationSuccess(true);
+                setReservationId(result.reservationId || null);
+                toast({
+                  title: "Reservation Confirmed! ✅",
+                  description: `Reservation ID: ${result.reservationId}`,
+                });
+              } else {
+                toast({
+                  title: "Reservation Error",
+                  description: result.error || "Failed to create reservation",
+                  variant: "destructive",
+                });
+              }
+            }
+          } catch (e) {
+            console.log("Could not parse JSON from message");
+          }
+        }
+      }
+    },
+    onError: (error) => {
+      console.error("Conversation error:", error);
+      setError(error?.message || "An error occurred");
+      toast({
+        title: "Error",
+        description: error?.message || "An error occurred",
+        variant: "destructive",
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (conversation.status === "connected") {
+      const timer = setInterval(() => {
+        setCallDuration((prev) => prev + 1);
+      }, 1000);
+
+      return () => clearInterval(timer);
+    } else {
+      setCallDuration(0);
+    }
+  }, [conversation.status]);
+
+  useEffect(() => {
+    const requestMicrophoneAccess = async () => {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (err) {
+        console.error("Microphone access denied:", err);
+        setError("Microphone access is required for voice calls");
+      }
+    };
+
+    requestMicrophoneAccess();
+  }, []);
+
+  const startCall = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      setCallEnded(false);
+      setCallDuration(0);
+      setReservationSuccess(false);
+
+      const agentId = import.meta.env.VITE_ELEVENLABS_AGENT_ID;
+      if (!agentId) {
+        setError("Missing ElevenLabs Agent ID");
+        toast({
+          title: "Configuration Error",
+          description: "ElevenLabs Agent ID is not configured",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await conversation.startSession({
+        agentId,
+        connectionType: "webrtc",
+      });
+    } catch (err: any) {
+      console.error("Error starting call:", err);
+      setError(err?.message || "Failed to start call");
+      toast({
+        title: "Error",
+        description: err?.message || "Failed to start call",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const endCall = async () => {
+    try {
+      await conversation.endSession();
+      setCallEnded(true);
+      toast({
+        title: "Call Ended",
+        description: "Call has been disconnected",
+      });
+    } catch (err: any) {
+      console.error("Error ending call:", err);
+      toast({
+        title: "Error",
+        description: err?.message || "Failed to end call",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  if (conversation.status === "connected") {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm">
+          <Card className="bg-slate-800 border-slate-700 shadow-2xl">
+            <CardContent className="pt-8 pb-8 text-center space-y-8">
+              <div className="flex justify-center">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg">
+                  <Phone className="w-12 h-12 text-white" />
+                </div>
+              </div>
+
+              <div>
+                <h2 className="text-2xl font-bold text-white">HotelHub Agent</h2>
+                <p className="text-sm text-slate-400 mt-1">AI Voice Assistant</p>
+              </div>
+
+              <div className="text-4xl font-mono font-bold text-green-400">
+                {formatTime(callDuration)}
+              </div>
+
+              <div className="bg-slate-700 rounded-lg p-4">
+                <p className="text-xs text-slate-400 mb-2">Calling</p>
+                <p className="text-2xl font-bold text-white tracking-wider">
+                  +212 (0) 5 24 43 93 23
+                </p>
+                <p className="text-xs text-slate-400 mt-2">Morocco</p>
+              </div>
+
+              <div className="flex justify-center gap-4 pt-4">
+                <Button
+                  onClick={() => conversation.setMicMuted(!conversation.micMuted)}
+                  variant="outline"
+                  size="lg"
+                  className="rounded-full w-16 h-16 p-0 bg-slate-700 border-slate-600 hover:bg-slate-600"
+                >
+                  {conversation.micMuted ? (
+                    <MicOff className="w-6 h-6 text-red-400" />
+                  ) : (
+                    <Mic className="w-6 h-6 text-white" />
+                  )}
+                </Button>
+
+                <Button
+                  onClick={endCall}
+                  size="lg"
+                  className="rounded-full w-16 h-16 p-0 bg-red-600 hover:bg-red-700"
+                >
+                  <PhoneOff className="w-6 h-6 text-white" />
+                </Button>
+              </div>
+
+              <p className="text-sm text-slate-400">
+                {conversation.micMuted ? "🔴 Muted" : "🟢 Connected"}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (callEnded) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm">
+          <Card className="bg-slate-800 border-slate-700 shadow-2xl">
+            <CardContent className="pt-12 pb-12 text-center space-y-8">
+              <CheckCircle className="w-20 h-20 text-green-400 mx-auto" />
+
+              <div>
+                <h2 className="text-2xl font-bold text-white">Call Ended</h2>
+                <p className="text-sm text-slate-400 mt-2">
+                  Duration: {formatTime(callDuration)}
+                </p>
+              </div>
+
+              {reservationSuccess && (
+                <div className="bg-green-900 border border-green-700 rounded-lg p-4">
+                  <p className="text-green-100 text-sm">
+                    ✅ Reservation created!
+                  </p>
+                  <p className="text-green-200 text-xs mt-1">
+                    ID: {reservationId}
+                  </p>
+                </div>
+              )}
+
+              {error && (
+                <div className="bg-red-900 border border-red-700 rounded-lg p-4">
+                  <p className="text-red-100 text-sm">{error}</p>
+                </div>
+              )}
+
+              <Button
+                onClick={() => {
+                  setCallEnded(false);
+                  setCallDuration(0);
+                  setReservationSuccess(false);
+                  setReservationId(null);
+                  setError(null);
+                }}
+                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 h-12 text-base"
+              >
+                Make Another Call
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        <Card className="bg-slate-800 border-slate-700 shadow-2xl">
+          <CardContent className="pt-12 pb-12 text-center space-y-12">
+            <div className="flex justify-center">
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg">
+                <Phone className="w-16 h-16 text-white" />
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-3xl font-bold text-white">HotelHub</h2>
+              <p className="text-sm text-slate-400 mt-2">AI Reservation Agent</p>
+            </div>
+
+            <Button
+              onClick={startCall}
+              disabled={isLoading}
+              className="w-full h-auto p-6 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-2xl shadow-lg"
+            >
+              <div className="text-center">
+                <p className="text-xs text-green-100 mb-2">Call this number</p>
+                <p className="text-4xl font-bold text-white tracking-wider font-mono">
+                  +212 (0) 5 24 43 93 23
+                </p>
+                <p className="text-xs text-green-100 mt-2">Morocco</p>
+              </div>
+            </Button>
+
+            {isLoading && (
+              <div className="flex items-center justify-center gap-2 text-slate-400">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span className="text-sm">Connecting...</span>
+              </div>
+            )}
+
+            {error && (
+              <Alert variant="destructive" className="bg-red-900 border-red-700">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-red-100">{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <p className="text-xs text-slate-400 px-4">
+              Tap the number above to start a voice call with our AI assistant
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
 interface HotelData {
   hotelName: string;
   rooms: Array<{
