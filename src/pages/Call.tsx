@@ -22,7 +22,88 @@ export const Appelle = () => {
   const [cachedRooms, setCachedRooms] = useState<any[]>([]);
   const { toast } = useToast();
 
+  // Client tool handler for confirming reservations
+  const handleConfirmReservation = async (parameters: any) => {
+    console.log("Client tool invoked: confirmReservation with parameters:", parameters);
+    
+    try {
+      // Map room type/name to actual room ID from cached rooms
+      let roomId = parameters.roomId || parameters.room_id;
+      
+      // If roomId looks like a room type (not a UUID), try to find matching room
+      if (roomId && !roomId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        console.log("Room ID is not a UUID, attempting to match room type:", roomId);
+        const roomType = roomId.toLowerCase().replace('_room', '').replace('_', ' ');
+        
+        // Find first available room matching the type
+        const matchingRoom = cachedRooms.find(room => {
+          const roomName = (room.room_number || room.name || '').toLowerCase();
+          return roomName.includes(roomType) || room.id.toLowerCase().includes(roomType);
+        });
+        
+        if (matchingRoom) {
+          console.log("Found matching room:", matchingRoom.id);
+          roomId = matchingRoom.id;
+        } else {
+          console.warn("No matching room found for type:", roomType);
+          // Use first available room as fallback
+          if (cachedRooms.length > 0) {
+            roomId = cachedRooms[0].id;
+            console.log("Using first available room as fallback:", roomId);
+          }
+        }
+      }
+      
+      // Call the reservation handler to create the reservation in Supabase
+      const result = await createReservationFromAgent({
+        guestName: parameters.customerName || parameters.guest_name,
+        guestEmail: parameters.email || parameters.guest_email,
+        guestPhone: parameters.phone || parameters.guest_phone,
+        roomId: roomId,
+        checkInDate: parameters.checkInDate || parameters.check_in_date,
+        checkOutDate: parameters.checkOutDate || parameters.check_out_date,
+        totalAmount: parameters.totalAmount || parameters.total_amount,
+        specialRequests: parameters.specialRequests || parameters.special_requests,
+      });
+
+      if (result.success) {
+        console.log("Reservation created successfully:", result.reservationId);
+        setReservationSuccess(true);
+        setReservationId(result.reservationId);
+        toast({
+          title: "Reservation Created",
+          description: `Reservation ID: ${result.reservationId}`,
+        });
+        
+        // Return success message to agent
+        return `Reservation for ${parameters.customerName || parameters.guest_name} confirmed successfully. Booking ID: ${result.reservationId}`;
+      } else {
+        console.error("Reservation creation failed:", result.error);
+        toast({
+          title: "Reservation Failed",
+          description: result.error,
+          variant: "destructive",
+        });
+        
+        // Return error message to agent
+        return `Failed to confirm reservation: ${result.error}`;
+      }
+    } catch (err: any) {
+      console.error("Error in confirmReservation client tool:", err);
+      toast({
+        title: "Error",
+        description: err.message || "Failed to process reservation",
+        variant: "destructive",
+      });
+      
+      return `Error processing reservation: ${err.message}`;
+    }
+  };
+
   const conversation = useConversation({
+    clientTools: {
+      confirmReservation: handleConfirmReservation,
+    },
     onConnect: () => {
       console.log("Connected to ElevenLabs agent");
       setError(null);
@@ -37,8 +118,21 @@ export const Appelle = () => {
       setIsCalling(false);
       setCallEnded(true);
     },
+    onToolCall: (toolName: string, parameters: any) => {
+      console.log(`🔧 Client tool called: ${toolName}`, parameters);
+    },
+    onError: (error: any) => {
+      console.error("❌ Conversation error:", error);
+      setError(error?.message || "Connection error");
+    },
+    onStatusChange: (status: any) => {
+      console.log("📊 Status changed:", status);
+    },
+    onDebug: (message: string) => {
+      console.log("🐛 Debug:", message);
+    },
     onMessage: async (message: any) => {
-      console.log("Message received:", message);
+      console.log("💬 Message received:", message);
       
       if (message.source === "agent" && message.message) {
         const text = message.message;
@@ -195,10 +289,20 @@ export const Appelle = () => {
 
       // Send cached room data as contextual information after connection
       if (cachedRooms && cachedRooms.length > 0) {
-        const roomsJson = JSON.stringify(cachedRooms);
+        // Format room data for agent with clear structure
+        const roomsList = cachedRooms.map(room => ({
+          id: room.id,
+          room_number: room.room_number,
+          type: room.type || room.room_type || 'standard',
+          price_per_night: room.price_per_night,
+          status: room.status,
+          amenities: room.amenities || [],
+        }));
+        
+        const roomsJson = JSON.stringify(roomsList);
         console.log("Room data to send:", roomsJson);
         
-        const contextMessage = `Available rooms in the hotel: ${roomsJson}. Use this information to help guests find suitable rooms for their stay.`;
+        const contextMessage = `Available rooms in the hotel: ${roomsJson}. When confirming a reservation, use the room ID from this list. For example, if a guest wants a deluxe room, find the room with type "deluxe" and use its ID in the confirmReservation tool call.`;
         conversation.sendContextualUpdate(contextMessage);
         console.log("Contextual room data sent to agent");
       } else {

@@ -69,37 +69,55 @@ export const createReservationFromAgent = async (
     // Step 4: Get or create guest
     let guestId: string;
 
+    // Validate and normalize email
+    let normalizedEmail = agentData.guestEmail?.trim() || null;
+    if (normalizedEmail && !normalizedEmail.includes("@")) {
+      console.warn("Invalid email format, creating guest without email:", normalizedEmail);
+      normalizedEmail = null;
+    }
+
     // Try to find existing guest by email
-    if (agentData.guestEmail) {
-      const { data: existingGuest } = await supabase
-        .from("guests")
-        .select("id")
-        .eq("email", agentData.guestEmail)
-        .single();
-
-      if (existingGuest) {
-        guestId = existingGuest.id;
-      } else {
-        // Create new guest
-        const { data: newGuest, error: guestError } = await supabase
+    if (normalizedEmail) {
+      try {
+        const { data: existingGuest, error: queryError } = await supabase
           .from("guests")
-          .insert({
-            name: agentData.guestName,
-            email: agentData.guestEmail || null,
-            phone: agentData.guestPhone || null,
-          })
           .select("id")
-          .single();
+          .eq("email", normalizedEmail)
+          .maybeSingle();
 
-        if (guestError) throw guestError;
-        guestId = newGuest.id;
+        if (queryError) {
+          console.warn("Error querying guest by email, will create new guest:", queryError);
+          normalizedEmail = null;
+        } else if (existingGuest) {
+          guestId = existingGuest.id;
+        } else {
+          // Create new guest with email
+          const { data: newGuest, error: guestError } = await supabase
+            .from("guests")
+            .insert({
+              name: agentData.guestName,
+              email: normalizedEmail,
+              phone: agentData.guestPhone || null,
+            })
+            .select("id")
+            .single();
+
+          if (guestError) throw guestError;
+          guestId = newGuest.id;
+        }
+      } catch (err) {
+        console.warn("Error with email-based guest lookup, creating guest without email:", err);
+        normalizedEmail = null;
       }
-    } else {
-      // Create guest without email
+    }
+
+    // If no email or email lookup failed, create guest without email
+    if (!normalizedEmail) {
       const { data: newGuest, error: guestError } = await supabase
         .from("guests")
         .insert({
           name: agentData.guestName,
+          email: null,
           phone: agentData.guestPhone || null,
         })
         .select("id")
