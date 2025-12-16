@@ -32,7 +32,7 @@ const Index = () => {
                   day: 'numeric' 
                 })}
               </span>
-              <Link to="/call">
+              <Link to="/appelle">
                 <Button className="bg-status-available hover:bg-status-available/90">
                   <Phone className="mr-2 h-4 w-4" />
                   Call Agent
