@@ -15,16 +15,7 @@ This is the **HotelHub PMS** front-end built with:
 ```bash
 npm install
 ```
-
-2. Create a `.env` file.
-
-You can start from the provided example file:
-
-```bash
-cp .env.exemple .env
-```
-
-This project uses Vite environment variables (prefixed with `VITE_`).
+riables (prefixed with `VITE_`).
 
 Required:
 
