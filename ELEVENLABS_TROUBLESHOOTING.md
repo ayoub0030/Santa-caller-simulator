@@ -13,10 +13,6 @@
 
 ### Step 1: Verify .env File
 Your `.env` should have:
-```
-VITE_ELEVENLABS_AGENT_ID="agent_2201katqvw5wec2vfpg004z38djk"
-VITE_ELEVENLABS_API_KEY="64c142e16e9d40e81887904cf72ea96978c8ba1030df797ce50621f0dbdf06af"
-```
 
 ✅ Both values are already added
 
@@ -64,9 +60,6 @@ npm run dev
 **Solution:**
 1. Open `.env` file
 2. Verify both values are present:
-   ```
-   VITE_ELEVENLABS_AGENT_ID="agent_2201katqvw5wec2vfpg004z38djk"
-   VITE_ELEVENLABS_API_KEY="64c142e16e9d40e81887904cf72ea96978c8ba1030df797ce50621f0dbdf06af"
    ```
 3. Restart dev server
 4. Hard refresh browser (Ctrl+Shift+R)
