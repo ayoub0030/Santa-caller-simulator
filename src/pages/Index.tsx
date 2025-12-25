@@ -111,12 +111,19 @@ const Index = () => {
         {/* Call to Action */}
         <section className="text-center mb-12 sm:mb-16">
           <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Ready to Talk to Santa?</h3>
-          <Link to="/appelle">
-            <Button className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg rounded-lg shadow-lg hover:shadow-xl transition-all w-full sm:w-auto">
-              <Phone className="mr-2 sm:mr-3 h-4 sm:h-5 w-4 sm:w-5" />
-              Start Santa Call
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/appelle">
+              <Button className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg rounded-lg shadow-lg hover:shadow-xl transition-all w-full sm:w-auto">
+                <Phone className="mr-2 sm:mr-3 h-4 sm:h-5 w-4 sm:w-5" />
+                Start Santa Call (1 min free)
+              </Button>
+            </Link>
+            <Link to="/payment?returnUrl=/appelle">
+              <Button className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg rounded-lg shadow-lg hover:shadow-xl transition-all w-full sm:w-auto">
+                💳 Buy Call Now ($2.99)
+              </Button>
+            </Link>
+          </div>
         </section>
 
         {/* Features List */}
@@ -181,7 +188,7 @@ const Index = () => {
             </div>
           </div>
           <div className="border-t border-red-600 pt-6 sm:pt-8 text-center text-red-100 text-xs sm:text-sm">
-            <p>&copy; 2024 Santa Call Simulator. Spreading Christmas magic worldwide. 🎄</p>
+            <p>&copy; 2025 Santa Call Simulator. Spreading Christmas magic worldwide. 🎄</p>
           </div>
         </div>
       </footer>

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { Link } from "react-router-dom";
-import { Phone, Loader2, AlertCircle, ArrowLeft, CheckCircle, PhoneOff, Mic, MicOff } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Phone, Loader2, AlertCircle, ArrowLeft, CheckCircle, PhoneOff, Mic, MicOff, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -12,6 +12,7 @@ import { createReservationFromAgent } from "@/lib/reservationHandler";
 import { useConversation } from "@elevenlabs/react";
 
 export const Appelle = () => {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [callEnded, setCallEnded] = useState(false);
@@ -20,6 +21,8 @@ export const Appelle = () => {
   const [reservationId, setReservationId] = useState<string | null>(null);
   const [isCalling, setIsCalling] = useState(false);
   const [cachedRooms, setCachedRooms] = useState<any[]>([]);
+  const [freeTrialEnded, setFreeTrialEnded] = useState(false);
+  const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
   const { toast } = useToast();
 
   // Client tool handler for confirming reservations
@@ -201,7 +204,22 @@ export const Appelle = () => {
     if (isCalling) {
       console.log("Starting call duration timer");
       const timer = setInterval(() => {
-        setCallDuration((prev) => prev + 1);
+        setCallDuration((prev) => {
+          const newDuration = prev + 1;
+          // Check if 1 minute (60 seconds) has passed
+          if (newDuration >= 60 && !freeTrialEnded) {
+            console.log("Free trial ended, showing payment prompt");
+            setFreeTrialEnded(true);
+            setShowPaymentPrompt(true);
+            // Pause the call
+            conversation.endSession();
+            toast({
+              title: "Free Trial Ended",
+              description: "Your 1 minute free trial is complete. Please complete payment to continue.",
+            });
+          }
+          return newDuration;
+        });
       }, 1000);
 
       return () => {
@@ -211,7 +229,7 @@ export const Appelle = () => {
     } else {
       setCallDuration(0);
     }
-  }, [isCalling]);
+  }, [isCalling, freeTrialEnded, conversation, toast]);
 
   // Fetch room data on component mount
   useEffect(() => {
@@ -350,6 +368,56 @@ export const Appelle = () => {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  if (showPaymentPrompt) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-red-700 via-red-600 to-green-700 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm">
+          <Card className="bg-gradient-to-b from-red-50 to-green-50 border-red-300 shadow-2xl">
+            <CardContent className="pt-12 pb-12 text-center space-y-8">
+              <div className="text-6xl">💳</div>
+
+              <div>
+                <h2 className="text-3xl font-bold text-red-700">Continue Your Call</h2>
+                <p className="text-sm text-green-700 mt-2">
+                  You've enjoyed 1 minute free! Continue talking to Santa.
+                </p>
+              </div>
+
+              <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-lg p-4 border-2 border-white">
+                <p className="text-white text-sm font-bold">🎅 Santa's Offer:</p>
+                <p className="text-white text-lg font-bold mt-2">$2.99</p>
+                <p className="text-white text-xs mt-1">For unlimited Santa conversation</p>
+              </div>
+
+              <Button
+                onClick={() => navigate("/payment?returnUrl=/appelle")}
+                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 h-12 text-base text-white font-bold"
+              >
+                Continue with Payment 💳
+              </Button>
+
+              <Button
+                onClick={() => {
+                  setShowPaymentPrompt(false);
+                  setCallEnded(true);
+                  setIsCalling(false);
+                }}
+                variant="outline"
+                className="w-full border-red-300 text-red-700 hover:bg-red-50 h-12 text-base font-bold"
+              >
+                End Call
+              </Button>
+
+              <p className="text-xs text-gray-600">
+                Secure payment powered by Stripe. Your information is safe.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   if (isCalling) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-red-700 via-red-600 to-green-700 flex items-center justify-center p-4">
@@ -370,6 +438,15 @@ export const Appelle = () => {
               <div className="text-5xl font-mono font-bold text-red-600">
                 {formatTime(callDuration)}
               </div>
+
+              {callDuration >= 50 && callDuration < 60 && (
+                <Alert className="bg-yellow-100 border-yellow-400">
+                  <Clock className="h-4 w-4 text-yellow-700" />
+                  <AlertDescription className="text-yellow-700">
+                    ⏰ Free trial ending in {60 - callDuration} seconds
+                  </AlertDescription>
+                </Alert>
+              )}
 
               <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-lg p-4 border-2 border-white">
                 <p className="text-xs text-white mb-2 font-bold">🎄 Talking to Santa 🎄</p>
