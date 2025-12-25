@@ -114,8 +114,6 @@ VITE_STRIPE_PRICE_ID=price_YOUR_PRICE_ID_HERE
 ### Example:
 
 ```env
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_51234567890abcdefghijklmnop
-VITE_STRIPE_PRICE_ID=price_1234567890abcdefghijklmnop
 ```
 
 3. Save the file
