@@ -31,7 +31,7 @@ STRIPE_SECRET_KEY=sk_test_YOUR_SECRET_KEY_HERE
 
 **Example:**
 ```
-STRIPE_SECRET_KEY=sk_test_51RV9kAB7vFVtRGRlp8Lit7s4VhTReXYCSipwcPkpu2feUvyAWCLfJZNW2DqC0oir7gheBhB9mVLDzTYb2MLuDwjD00ahdkWfst
+STRIPE_SECRET_KEY=sk_test_YOUR_SECRET_KEY_HERE
 ```
 
 ### Step 3: Restart Dev Server

@@ -40,8 +40,8 @@ These are like passwords that connect your app to Stripe.
 ### Copy your keys:
 
 ```
-Publishable Key: pk_test_XXXXXXXXXXXXXXXXXXXXXXXX
-Secret Key: sk_test_XXXXXXXXXXXXXXXXXXXXXXXX
+Publishable Key: pk_test_YOUR_PUBLISHABLE_KEY
+Secret Key: sk_test_YOUR_SECRET_KEY
 ```
 
 **⚠️ IMPORTANT**: 
