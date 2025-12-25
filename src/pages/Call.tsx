@@ -352,31 +352,31 @@ export const Appelle = () => {
 
   if (isCalling) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-b from-red-700 via-red-600 to-green-700 flex items-center justify-center p-4">
         <div className="w-full max-w-sm">
-          <Card className="bg-slate-800 border-slate-700 shadow-2xl">
+          <Card className="bg-gradient-to-b from-red-50 to-green-50 border-red-300 shadow-2xl">
             <CardContent className="pt-8 pb-8 text-center space-y-8">
               <div className="flex justify-center">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg">
-                  <Phone className="w-12 h-12 text-white" />
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center shadow-lg border-4 border-white">
+                  <img src="/iconsanta.png" alt="Santa" className="w-20 h-20 object-cover rounded-full" />
                 </div>
               </div>
 
               <div>
-                <h2 className="text-2xl font-bold text-white">HotelHub Agent</h2>
-                <p className="text-sm text-slate-400 mt-1">AI Voice Assistant</p>
+                <h2 className="text-3xl font-bold text-red-700">🎅 Santa Claus</h2>
+                <p className="text-sm text-green-700 mt-1">North Pole Voice Call</p>
               </div>
 
-              <div className="text-4xl font-mono font-bold text-green-400">
+              <div className="text-5xl font-mono font-bold text-red-600">
                 {formatTime(callDuration)}
               </div>
 
-              <div className="bg-slate-700 rounded-lg p-4">
-                <p className="text-xs text-slate-400 mb-2">Calling</p>
+              <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-lg p-4 border-2 border-white">
+                <p className="text-xs text-white mb-2 font-bold">🎄 Talking to Santa 🎄</p>
                 <p className="text-xl font-bold text-white tracking-wider">
-                  +212 5 24 43 93 23
+                  🎅 North Pole
                 </p>
-                <p className="text-xs text-slate-400 mt-2">Morocco</p>
+                <p className="text-xs text-red-100 mt-2">Ho Ho Ho!</p>
               </div>
 
               <div className="flex justify-center gap-4 pt-4">
@@ -384,10 +384,10 @@ export const Appelle = () => {
                   onClick={() => conversation.setMicMuted(!conversation.micMuted)}
                   variant="outline"
                   size="lg"
-                  className="rounded-full w-16 h-16 p-0 bg-slate-700 border-slate-600 hover:bg-slate-600"
+                  className="rounded-full w-16 h-16 p-0 bg-green-600 border-green-700 hover:bg-green-700"
                 >
                   {conversation.micMuted ? (
-                    <MicOff className="w-6 h-6 text-red-400" />
+                    <MicOff className="w-6 h-6 text-white" />
                   ) : (
                     <Mic className="w-6 h-6 text-white" />
                   )}
@@ -402,8 +402,8 @@ export const Appelle = () => {
                 </Button>
               </div>
 
-              <p className="text-sm text-slate-400">
-                {conversation.micMuted ? "🔴 Muted" : "🟢 Connected"}
+              <p className="text-sm text-red-700 font-semibold">
+                {conversation.micMuted ? "🔴 Muted" : "🟢 Listening"}
               </p>
             </CardContent>
           </Card>
@@ -414,33 +414,27 @@ export const Appelle = () => {
 
   if (callEnded) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-b from-red-700 via-red-600 to-green-700 flex items-center justify-center p-4">
         <div className="w-full max-w-sm">
-          <Card className="bg-slate-800 border-slate-700 shadow-2xl">
+          <Card className="bg-gradient-to-b from-red-50 to-green-50 border-red-300 shadow-2xl">
             <CardContent className="pt-12 pb-12 text-center space-y-8">
-              <CheckCircle className="w-20 h-20 text-green-400 mx-auto" />
+              <div className="text-6xl">🎄</div>
 
               <div>
-                <h2 className="text-2xl font-bold text-white">Call Ended</h2>
-                <p className="text-sm text-slate-400 mt-2">
-                  Duration: {formatTime(callDuration)}
+                <h2 className="text-3xl font-bold text-red-700">Thanks for Calling Santa!</h2>
+                <p className="text-sm text-green-700 mt-2">
+                  Call Duration: {formatTime(callDuration)}
                 </p>
               </div>
 
-              {reservationSuccess && (
-                <div className="bg-green-900 border border-green-700 rounded-lg p-4">
-                  <p className="text-green-100 text-sm">
-                    ✅ Reservation created!
-                  </p>
-                  <p className="text-green-200 text-xs mt-1">
-                    ID: {reservationId}
-                  </p>
-                </div>
-              )}
+              <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-lg p-4 border-2 border-white">
+                <p className="text-white text-sm font-bold">🎅 Santa says:</p>
+                <p className="text-white text-xs mt-2">"Merry Christmas! Thank you for visiting the North Pole!"</p>
+              </div>
 
               {error && (
-                <div className="bg-red-900 border border-red-700 rounded-lg p-4">
-                  <p className="text-red-100 text-sm">{error}</p>
+                <div className="bg-red-100 border-2 border-red-500 rounded-lg p-4">
+                  <p className="text-red-700 text-sm">{error}</p>
                 </div>
               )}
 
@@ -452,10 +446,19 @@ export const Appelle = () => {
                   setReservationId(null);
                   setError(null);
                 }}
-                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 h-12 text-base"
+                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 h-12 text-base text-white font-bold"
               >
-                Make Another Call
+                Call Santa Again 🎅
               </Button>
+
+              <Link to="/">
+                <Button
+                  variant="outline"
+                  className="w-full border-red-300 text-red-700 hover:bg-red-50 h-12 text-base font-bold"
+                >
+                  Back to Home
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
@@ -464,51 +467,51 @@ export const Appelle = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-red-700 via-red-600 to-green-700 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
-        <Card className="bg-slate-800 border-slate-700 shadow-2xl">
+        <Card className="bg-gradient-to-b from-red-50 to-green-50 border-red-300 shadow-2xl">
           <CardContent className="pt-12 pb-12 text-center space-y-12">
             <div className="flex justify-center">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg">
-                <Phone className="w-16 h-16 text-white" />
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center shadow-lg border-4 border-white">
+                <img src="/iconsanta.png" alt="Santa" className="w-28 h-28 object-cover rounded-full" />
               </div>
             </div>
 
             <div>
-              <h2 className="text-3xl font-bold text-white">HotelHub</h2>
-              <p className="text-sm text-slate-400 mt-2">AI Reservation Agent</p>
+              <h2 className="text-3xl font-bold text-red-700">🎅 Santa Claus</h2>
+              <p className="text-sm text-green-700 mt-2">North Pole Voice Call</p>
             </div>
 
             <Button
               onClick={startCall}
               disabled={isLoading}
-              className="w-full h-auto p-6 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-2xl shadow-lg"
+              className="w-full h-auto p-6 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded-2xl shadow-lg text-white font-bold"
             >
               <div className="text-center">
-                <p className="text-xs text-green-100 mb-2">Call this number</p>
+                <p className="text-xs text-red-100 mb-2">🎄 Call Santa 🎄</p>
                 <p className="text-2xl font-bold text-white tracking-wider font-mono">
-                  +212 5 24 43 93 23
+                  🎅 North Pole
                 </p>
-                <p className="text-xs text-green-100 mt-2">Morocco</p>
+                <p className="text-xs text-red-100 mt-2">Ho Ho Ho!</p>
               </div>
             </Button>
 
             {isLoading && (
-              <div className="flex items-center justify-center gap-2 text-slate-400">
+              <div className="flex items-center justify-center gap-2 text-red-700">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="text-sm">Connecting...</span>
+                <span className="text-sm font-semibold">Connecting to Santa...</span>
               </div>
             )}
 
             {error && (
-              <Alert variant="destructive" className="bg-red-900 border-red-700">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="text-red-100">{error}</AlertDescription>
+              <Alert variant="destructive" className="bg-red-100 border-red-300">
+                <AlertCircle className="h-4 w-4 text-red-700" />
+                <AlertDescription className="text-red-700">{error}</AlertDescription>
               </Alert>
             )}
 
-            <p className="text-xs text-slate-400 px-4">
-              Tap the number above to start a voice call with our AI assistant
+            <p className="text-xs text-green-700 px-4 font-semibold">
+              Click above to start a magical voice call with Santa Claus!
             </p>
           </CardContent>
         </Card>
