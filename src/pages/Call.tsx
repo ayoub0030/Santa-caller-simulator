@@ -269,6 +269,17 @@ export const Appelle = () => {
     requestMicrophoneAccess();
   }, []);
 
+  // Auto-start call when page loads
+  useEffect(() => {
+    const autoStartCall = async () => {
+      // Small delay to ensure component is fully mounted
+      await new Promise(resolve => setTimeout(resolve, 500));
+      await startCall();
+    };
+
+    autoStartCall();
+  }, []);
+
   const startCall = async () => {
     try {
       setIsLoading(true);
