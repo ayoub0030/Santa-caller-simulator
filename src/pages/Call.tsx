@@ -431,8 +431,8 @@ export const Appelle = () => {
               </div>
 
               <div>
-                <h2 className="text-3xl font-bold text-red-700">🎅 Santa Claus</h2>
-                <p className="text-sm text-green-700 mt-1">North Pole Voice Call</p>
+                <h2 className="text-3xl font-bold text-red-700">Santa is calling you 🎅 </h2>
+                <p className="text-sm text-green-700 mt-1">Click to answer him</p>
               </div>
 
               <div className="text-5xl font-mono font-bold text-red-600">
@@ -555,8 +555,7 @@ export const Appelle = () => {
             </div>
 
             <div>
-              <h2 className="text-3xl font-bold text-red-700">🎅 Santa Claus</h2>
-              <p className="text-sm text-green-700 mt-2">North Pole Voice Call</p>
+              <h2 className="text-3xl font-bold text-red-700">Santa is calling you</h2>
             </div>
 
             <Button
@@ -565,9 +564,8 @@ export const Appelle = () => {
               className="w-full h-auto p-6 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded-2xl shadow-lg text-white font-bold"
             >
               <div className="text-center">
-                <p className="text-xs text-red-100 mb-2">🎄 Call Santa 🎄</p>
                 <p className="text-2xl font-bold text-white tracking-wider font-mono">
-                  🎅 North Pole
+                  Click to answer him
                 </p>
                 <p className="text-xs text-red-100 mt-2">Ho Ho Ho!</p>
               </div>
