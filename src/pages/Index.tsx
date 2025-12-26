@@ -47,14 +47,19 @@ const Index = () => {
 
             {/* Buttons */}
             <div className="w-full flex flex-col gap-3">
-              <Link to="/appelle" className="w-full">
+              <Link to="/" className="w-full">
                 <Button className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg text-base flex items-center justify-center gap-2 border-2 border-green-700">
-                  <span className="text-lg"></span>
+                  <span className="text-lg">▶</span>
                   ANSWER HIS CALL
                 </Button>
               </Link>
 
-             
+              <Link to="/payment?returnUrl=/" className="w-full">
+                <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg text-base flex items-center justify-center gap-2 border-2 border-red-800">
+                  <span className="text-lg">💳</span>
+                  BUY CALL ($2.99)
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
