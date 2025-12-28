@@ -207,7 +207,7 @@ export const Appelle = () => {
         setCallDuration((prev) => {
           const newDuration = prev + 1;
           // Check if 3 minutes (180 seconds) has passed
-          if (newDuration >= 180 && !freeTrialEnded) {
+          if (newDuration >= 300 && !freeTrialEnded) {
             console.log("Free trial ended, showing payment prompt");
             setFreeTrialEnded(true);
             setShowPaymentPrompt(true);
@@ -215,7 +215,7 @@ export const Appelle = () => {
             conversation.endSession();
             toast({
               title: "Free Trial Ended",
-              description: "Your 3 minute free trial is complete. Please complete payment to continue.",
+              description: "Your 5 minute free trial is complete. Please complete payment to continue.",
             });
           }
           return newDuration;
@@ -390,7 +390,7 @@ export const Appelle = () => {
               <div>
                 <h2 className="text-3xl font-bold text-red-700">Continue Your Call</h2>
                 <p className="text-sm text-green-700 mt-2">
-                  You've enjoyed 1 minute free! Continue talking to Santa.
+                  You've enjoyed 5 minute free! Continue talking to Santa.
                 </p>
               </div>
 
@@ -442,8 +442,7 @@ export const Appelle = () => {
               </div>
 
               <div>
-                <h2 className="text-3xl font-bold text-red-700">Santa is calling you 🎅 </h2>
-                <p className="text-sm text-green-700 mt-1">Click to answer him</p>
+                <h2 className="text-3xl font-bold text-red-700">Santa clause </h2>
               </div>
 
               <div className="text-5xl font-mono font-bold text-red-600">
