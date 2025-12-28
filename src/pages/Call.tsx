@@ -206,8 +206,8 @@ export const Appelle = () => {
       const timer = setInterval(() => {
         setCallDuration((prev) => {
           const newDuration = prev + 1;
-          // Check if 1 minute (60 seconds) has passed
-          if (newDuration >= 60 && !freeTrialEnded) {
+          // Check if 3 minutes (180 seconds) has passed
+          if (newDuration >= 180 && !freeTrialEnded) {
             console.log("Free trial ended, showing payment prompt");
             setFreeTrialEnded(true);
             setShowPaymentPrompt(true);
@@ -215,7 +215,7 @@ export const Appelle = () => {
             conversation.endSession();
             toast({
               title: "Free Trial Ended",
-              description: "Your 1 minute free trial is complete. Please complete payment to continue.",
+              description: "Your 3 minute free trial is complete. Please complete payment to continue.",
             });
           }
           return newDuration;
