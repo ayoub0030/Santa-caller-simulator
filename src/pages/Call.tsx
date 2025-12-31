@@ -590,57 +590,92 @@ export const Appelle = () => {
 
   if (callEnded) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-red-700 via-red-600 to-green-700 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl rounded-3xl overflow-hidden">
-            <CardContent className="pt-12 pb-10 text-center space-y-6">
-              {/* Christmas Tree Icon */}
-              <div className="text-7xl animate-bounce">🎄</div>
-
-              {/* Thank You Message */}
-              <div>
-                <h2 className="text-3xl font-bold text-red-700">Thanks for Calling Santa!</h2>
-                <p className="text-base text-green-700 mt-3 font-medium">
-                  Call Duration: {formatTime(callDuration)}
-                </p>
+      <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-700 to-green-800 flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Animated background particles */}
+        <div className="absolute inset-0">
+          <div className="absolute top-10 left-20 w-64 h-64 bg-green-500/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-10 right-20 w-80 h-80 bg-red-500/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '0.5s'}}></div>
+          <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-yellow-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+        </div>
+        
+        <div className="w-full max-w-md relative z-10">
+          <Card className="bg-white/98 backdrop-blur-xl border-0 shadow-2xl rounded-[2.5rem] overflow-hidden">
+            <CardContent className="pt-10 pb-10 text-center space-y-6">
+              {/* Christmas Tree Icon with glow */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-32 h-32 bg-green-500/30 rounded-full blur-3xl animate-pulse"></div>
+                </div>
+                <div className="relative text-8xl animate-bounce">🎄</div>
               </div>
 
-              {/* Santa's Message Card */}
-              <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-2xl p-6 shadow-lg">
-                <p className="text-white text-base font-bold mb-2">🎅 Santa says:</p>
-                <p className="text-white text-sm leading-relaxed">"Merry Christmas! Thank you for visiting the North Pole!"</p>
+              {/* Thank You Message */}
+              <div className="space-y-2">
+                <h2 className="text-4xl font-bold bg-gradient-to-r from-red-600 via-red-700 to-red-800 bg-clip-text text-transparent">Thanks for Calling!</h2>
+                <div className="flex items-center justify-center gap-2 mt-3">
+                  <Clock className="w-5 h-5 text-green-600" />
+                  <p className="text-lg text-gray-700 font-semibold">
+                    {formatTime(callDuration)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Santa's Message Card with enhanced design */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl blur-md opacity-50 group-hover:opacity-70 transition-opacity"></div>
+                <div className="relative bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-2xl p-6 shadow-xl">
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <span className="text-3xl">🎅</span>
+                    <p className="text-white text-lg font-bold">Santa says:</p>
+                  </div>
+                  <p className="text-white text-base leading-relaxed font-medium">"Merry Christmas! Thank you for visiting the North Pole! May your holidays be filled with joy!"</p>
+                  <div className="mt-4 flex items-center justify-center gap-1">
+                    <Sparkles className="w-4 h-4 text-yellow-300" />
+                    <span className="text-red-100 text-sm">Ho Ho Ho!</span>
+                    <Sparkles className="w-4 h-4 text-yellow-300" />
+                  </div>
+                </div>
               </div>
 
               {/* Error Display */}
               {error && (
-                <div className="bg-red-50 border-2 border-red-300 rounded-2xl p-4">
-                  <p className="text-red-700 text-sm font-medium">{error}</p>
-                </div>
+                <Alert className="bg-red-50 border-2 border-red-300 rounded-2xl">
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                  <AlertDescription className="text-red-700 font-medium">{error}</AlertDescription>
+                </Alert>
               )}
 
-              {/* Call Again Button */}
-              <Button
-                onClick={() => {
-                  setCallEnded(false);
-                  setCallDuration(0);
-                  setReservationSuccess(false);
-                  setReservationId(null);
-                  setError(null);
-                }}
-                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 h-14 text-lg text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]"
-              >
-                Call Santa Again 🎅
-              </Button>
-
-              {/* Back to Home Button */}
-              <Link to="/" className="block">
+              {/* Action Buttons */}
+              <div className="space-y-3 pt-2">
                 <Button
-                  variant="outline"
-                  className="w-full border-2 border-red-300 text-red-700 hover:bg-red-50 h-14 text-lg font-bold rounded-2xl transition-all duration-200 hover:scale-[1.02]"
+                  onClick={() => {
+                    setCallEnded(false);
+                    setCallDuration(0);
+                    setReservationSuccess(false);
+                    setReservationId(null);
+                    setError(null);
+                  }}
+                  className="w-full bg-gradient-to-r from-red-600 via-red-700 to-red-800 hover:from-red-700 hover:to-red-900 h-16 text-xl text-white font-bold rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border-0"
                 >
-                  Back to Home
+                  <Phone className="w-6 h-6 mr-2" />
+                  Call Santa Again
                 </Button>
-              </Link>
+
+                <Link to="/" className="block">
+                  <Button
+                    variant="outline"
+                    className="w-full border-2 border-gray-300 text-gray-700 hover:bg-gray-50 h-14 text-lg font-semibold rounded-2xl transition-all duration-200 hover:scale-[1.01]"
+                  >
+                    <ArrowLeft className="w-5 h-5 mr-2" />
+                    Back to Home
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Footer message */}
+              <p className="text-sm text-gray-500 font-medium pt-2">
+                ✨ Share the magic with your friends!
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -649,59 +684,125 @@ export const Appelle = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-red-700 via-red-600 to-green-700 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl rounded-3xl overflow-hidden">
-          <CardContent className="pt-12 pb-10 text-center space-y-8">
-            {/* Santa Avatar */}
+    <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-700 to-green-800 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-red-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-10 w-80 h-80 bg-green-500/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '0.7s'}}></div>
+        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-yellow-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1.4s'}}></div>
+      </div>
+      
+      <div className="w-full max-w-md relative z-10">
+        <Card className="bg-white/98 backdrop-blur-xl border-0 shadow-2xl rounded-[2.5rem] overflow-hidden">
+          <CardContent className="pt-10 pb-10 text-center space-y-6">
+            {/* Santa Avatar with enhanced animations */}
             <div className="flex justify-center">
               <div className="relative">
-                <div className="absolute inset-0 rounded-full bg-red-400 animate-pulse opacity-30"></div>
-                <div className="relative w-36 h-36 rounded-full bg-gradient-to-br from-red-500 via-red-600 to-red-700 flex items-center justify-center shadow-2xl border-4 border-white ring-4 ring-red-200">
-                  <img src="/iconsanta.png" alt="Santa" className="w-32 h-32 object-cover rounded-full" />
+                {/* Outer glow */}
+                <div className="absolute -inset-8 rounded-full bg-gradient-to-r from-red-400 via-red-500 to-red-600 opacity-20 blur-2xl animate-pulse"></div>
+                {/* Ring animation */}
+                <div className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-20"></div>
+                {/* Avatar container */}
+                <div className="relative w-40 h-40 rounded-full bg-gradient-to-br from-red-400 via-red-600 to-red-800 flex items-center justify-center shadow-2xl border-[6px] border-white ring-4 ring-red-200/60">
+                  <img src="/iconsanta.png" alt="Santa" className="w-36 h-36 object-cover rounded-full" />
+                </div>
+                {/* Sparkle effects */}
+                <div className="absolute -top-2 -right-2">
+                  <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse" />
+                </div>
+                <div className="absolute -bottom-2 -left-2">
+                  <Sparkles className="w-6 h-6 text-yellow-300 animate-pulse" style={{animationDelay: '0.5s'}} />
                 </div>
               </div>
             </div>
 
-            {/* Title */}
-            <div>
-              <h2 className="text-3xl font-bold text-red-700">Santa is calling you</h2>
+            {/* Title with gradient */}
+            <div className="space-y-2">
+              <h2 className="text-4xl font-bold bg-gradient-to-r from-red-600 via-red-700 to-red-800 bg-clip-text text-transparent">Santa is calling you</h2>
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <p className="text-sm text-gray-600 font-medium">Available now</p>
+              </div>
             </div>
 
-            {/* Answer Button */}
-            <Button
-              onClick={startCall}
-              disabled={isLoading}
-              className="w-full h-auto p-6 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded-2xl shadow-lg hover:shadow-xl text-white font-bold transition-all duration-200 hover:scale-[1.02] disabled:opacity-50"
-            >
-              <div className="text-center">
-                <p className="text-2xl font-bold text-white tracking-wide">
-                  Click to answer him
-                </p>
-                <p className="text-sm text-red-100 mt-2 font-medium">Ho Ho Ho!</p>
-              </div>
-            </Button>
+            {/* Answer Button with premium design */}
+            <div className="relative pt-2">
+              <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl blur-lg opacity-40"></div>
+              <Button
+                onClick={startCall}
+                disabled={isLoading}
+                className="relative w-full h-auto p-7 bg-gradient-to-r from-green-600 via-green-700 to-green-800 hover:from-green-700 hover:to-green-900 rounded-2xl shadow-xl hover:shadow-2xl text-white font-bold transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 border-0"
+              >
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-3 mb-2">
+                    <Phone className="w-7 h-7 animate-pulse" />
+                    <p className="text-2xl font-bold text-white tracking-wide">
+                      Answer Call
+                    </p>
+                  </div>
+                  <p className="text-sm text-green-100 font-medium flex items-center justify-center gap-2">
+                    <Sparkles className="w-4 h-4" />
+                    Ho Ho Ho!
+                    <Sparkles className="w-4 h-4" />
+                  </p>
+                </div>
+              </Button>
+            </div>
 
             {/* Loading State */}
             {isLoading && (
-              <div className="flex items-center justify-center gap-3 text-red-700">
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span className="text-base font-semibold">Connecting to Santa...</span>
+              <div className="flex items-center justify-center gap-3 bg-blue-50 rounded-2xl py-4 px-6">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                <span className="text-base font-bold text-blue-700">Connecting to the North Pole...</span>
               </div>
             )}
 
             {/* Error Display */}
             {error && (
-              <Alert variant="destructive" className="bg-red-50 border-red-300 rounded-2xl">
-                <AlertCircle className="h-5 w-5 text-red-700" />
-                <AlertDescription className="text-red-700 font-medium">{error}</AlertDescription>
+              <Alert variant="destructive" className="bg-red-50 border-2 border-red-300 rounded-2xl">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+                <AlertDescription className="text-red-700 font-semibold">{error}</AlertDescription>
               </Alert>
             )}
 
-            {/* Info Text */}
-            <p className="text-sm text-green-700 px-4 font-semibold leading-relaxed">
-              Click above to start a magical voice call with Santa Claus!
-            </p>
+            {/* Info Card */}
+            <div className="bg-gradient-to-br from-red-50 to-green-50 rounded-2xl p-5 border-2 border-red-100">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center">
+                    <span className="text-xl">🎅</span>
+                  </div>
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-bold text-gray-800 mb-1">Talk to Santa Claus</p>
+                  <p className="text-xs text-gray-600 leading-relaxed">
+                    Experience the magic of Christmas with a real-time voice conversation from the North Pole!
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Features */}
+            <div className="grid grid-cols-3 gap-3 pt-2">
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                </div>
+                <p className="text-xs font-semibold text-gray-600">Free Trial</p>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Mic className="w-5 h-5 text-blue-600" />
+                </div>
+                <p className="text-xs font-semibold text-gray-600">Live Voice</p>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-yellow-600" />
+                </div>
+                <p className="text-xs font-semibold text-gray-600">AI Magic</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
