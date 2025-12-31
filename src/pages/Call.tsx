@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Phone, Loader2, AlertCircle, ArrowLeft, CheckCircle, PhoneOff, Mic, MicOff, Clock } from "lucide-react";
+import { Phone, Loader2, AlertCircle, ArrowLeft, CheckCircle, PhoneOff, Mic, MicOff, Clock, Sparkles, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -381,47 +381,84 @@ export const Appelle = () => {
 
   if (showPaymentPrompt) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-red-700 via-red-600 to-green-700 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm">
-          <Card className="bg-gradient-to-b from-red-50 to-green-50 border-red-300 shadow-2xl">
-            <CardContent className="pt-12 pb-12 text-center space-y-8">
-              <div className="text-6xl">💳</div>
+      <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-700 to-green-800 flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-red-500/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-green-500/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+        </div>
+        
+        <div className="w-full max-w-md relative z-10">
+          <Card className="bg-white/98 backdrop-blur-xl border-0 shadow-2xl rounded-3xl overflow-hidden">
+            <CardContent className="pt-10 pb-10 text-center space-y-6">
+              {/* Premium Icon */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-24 h-24 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full blur-2xl opacity-50 animate-pulse"></div>
+                </div>
+                <div className="relative text-7xl">
+                  <Sparkles className="w-20 h-20 mx-auto text-yellow-500 animate-pulse" />
+                </div>
+              </div>
 
-              <div>
-                <h2 className="text-3xl font-bold text-red-700">Continue Your Call</h2>
-                <p className="text-sm text-green-700 mt-2">
-                  You've enjoyed 5 minute free! Continue talking to Santa.
+              {/* Title Section */}
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">Continue Your Magic</h2>
+                <p className="text-base text-gray-600 font-medium">
+                  You've enjoyed 3 minutes free! Keep the magic alive.
                 </p>
               </div>
 
-              <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-lg p-4 border-2 border-white">
-                <p className="text-white text-sm font-bold">🎅 Santa's Offer:</p>
-                <p className="text-white text-lg font-bold mt-2">$2.99</p>
-                <p className="text-white text-xs mt-1">For unlimited Santa conversation</p>
+              {/* Pricing Card */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl blur-sm opacity-50"></div>
+                <div className="relative bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-2xl p-6 shadow-xl">
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <span className="text-white text-lg font-bold">🎅</span>
+                    <p className="text-white text-lg font-bold">Santa's Premium Offer</p>
+                  </div>
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-white/80 text-2xl font-semibold line-through">$4.99</span>
+                    <span className="text-white text-5xl font-bold">$2.99</span>
+                  </div>
+                  <p className="text-red-100 text-sm mt-3 font-medium">Unlimited Santa conversations forever</p>
+                  <div className="mt-4 flex items-center justify-center gap-2 text-white/90 text-xs">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>No time limits</span>
+                  </div>
+                </div>
               </div>
 
-              <Button
-                onClick={() => navigate("/payment?returnUrl=/appelle")}
-                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 h-12 text-base text-white font-bold"
-              >
-                Continue with Payment 💳
-              </Button>
+              {/* CTA Buttons */}
+              <div className="space-y-3 pt-2">
+                <Button
+                  onClick={() => navigate("/payment?returnUrl=/appelle")}
+                  className="w-full bg-gradient-to-r from-green-600 via-green-700 to-green-800 hover:from-green-700 hover:to-green-900 h-14 text-lg text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border-0"
+                >
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Unlock Unlimited Access
+                </Button>
 
-              <Button
-                onClick={() => {
-                  setShowPaymentPrompt(false);
-                  setCallEnded(true);
-                  setIsCalling(false);
-                }}
-                variant="outline"
-                className="w-full border-red-300 text-red-700 hover:bg-red-50 h-12 text-base font-bold"
-              >
-                End Call
-              </Button>
+                <Button
+                  onClick={() => {
+                    setShowPaymentPrompt(false);
+                    setCallEnded(true);
+                    setIsCalling(false);
+                  }}
+                  variant="outline"
+                  className="w-full border-2 border-gray-300 text-gray-700 hover:bg-gray-50 h-12 text-base font-semibold rounded-2xl transition-all duration-200"
+                >
+                  Maybe Later
+                </Button>
+              </div>
 
-              <p className="text-xs text-gray-600">
-                Secure payment powered by Stripe. Your information is safe.
-              </p>
+              {/* Security Badge */}
+              <div className="flex items-center justify-center gap-2 pt-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <p className="text-xs text-gray-500 font-medium">
+                  🔒 Secure payment by Stripe • Your data is protected
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -431,78 +468,117 @@ export const Appelle = () => {
 
   if (isCalling) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-red-700 via-red-600 to-green-700 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl rounded-3xl overflow-hidden">
-            <CardContent className="pt-12 pb-10 text-center space-y-6">
-              {/* Santa Avatar with pulse animation */}
+      <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-700 to-green-800 flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Animated background */}
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_50%)] animate-pulse"></div>
+        </div>
+        
+        <div className="w-full max-w-md relative z-10">
+          <Card className="bg-white/98 backdrop-blur-xl border-0 shadow-2xl rounded-[2.5rem] overflow-hidden">
+            <CardContent className="pt-10 pb-10 text-center space-y-5">
+              {/* Santa Avatar with advanced animations */}
               <div className="flex justify-center">
                 <div className="relative">
-                  <div className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-20"></div>
-                  <div className="relative w-32 h-32 rounded-full bg-gradient-to-br from-red-500 via-red-600 to-red-700 flex items-center justify-center shadow-xl border-4 border-white ring-4 ring-red-200">
-                    <img src="/iconsanta.png" alt="Santa" className="w-28 h-28 object-cover rounded-full" />
+                  {/* Outer pulse ring */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-red-400 to-red-600 animate-ping opacity-20"></div>
+                  {/* Middle ring */}
+                  <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-red-300 to-red-500 opacity-30 blur-md animate-pulse"></div>
+                  {/* Avatar container */}
+                  <div className="relative w-36 h-36 rounded-full bg-gradient-to-br from-red-400 via-red-600 to-red-800 flex items-center justify-center shadow-2xl border-[6px] border-white ring-4 ring-red-200/50">
+                    <img src="/iconsanta.png" alt="Santa" className="w-32 h-32 object-cover rounded-full" />
+                  </div>
+                  {/* Live indicator */}
+                  <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    LIVE
                   </div>
                 </div>
               </div>
 
-              {/* Santa Name */}
+              {/* Santa Name with gradient */}
               <div>
-                <h2 className="text-3xl font-bold text-red-700">Santa clause</h2>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-red-600 via-red-700 to-red-800 bg-clip-text text-transparent">Santa Claus</h2>
               </div>
 
-              {/* Call Duration Timer */}
-              <div className="text-6xl font-mono font-bold text-red-600 tracking-wider">
-                {formatTime(callDuration)}
+              {/* Call Duration Timer with enhanced styling */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-red-100 to-red-50 rounded-2xl blur-xl opacity-50"></div>
+                <div className="relative bg-gradient-to-br from-red-50 to-red-100/50 rounded-2xl py-4 px-6">
+                  <div className="text-6xl font-mono font-bold bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent tracking-wider">
+                    {formatTime(callDuration)}
+                  </div>
+                </div>
               </div>
 
               {/* Warning Alert */}
               {callDuration >= 170 && callDuration < 180 && (
-                <Alert className="bg-yellow-50 border-yellow-300 animate-pulse">
-                  <Clock className="h-4 w-4 text-yellow-700" />
-                  <AlertDescription className="text-yellow-700 font-semibold">
-                    ⏰ Free trial ending in {180 - callDuration} seconds
+                <Alert className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-400 animate-pulse rounded-2xl">
+                  <Clock className="h-5 w-5 text-yellow-700" />
+                  <AlertDescription className="text-yellow-800 font-bold">
+                    ⏰ {180 - callDuration}s remaining in free trial
                   </AlertDescription>
                 </Alert>
               )}
 
-              {/* Location Card */}
-              <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-2xl p-6 shadow-lg">
-                <p className="text-sm text-white/90 mb-1 font-semibold">🎄 Talking to Santa 🎄</p>
-                <p className="text-2xl font-bold text-white tracking-wide flex items-center justify-center gap-2">
-                  🎅 North Pole
-                </p>
-                <p className="text-sm text-red-100 mt-2 font-medium">Ho Ho Ho!</p>
+              {/* Location Card with modern design */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl blur-md opacity-50 group-hover:opacity-70 transition-opacity"></div>
+                <div className="relative bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-2xl p-6 shadow-xl">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Sparkles className="w-5 h-5 text-yellow-300" />
+                    <p className="text-sm text-white/95 font-bold">Talking to Santa</p>
+                    <Sparkles className="w-5 h-5 text-yellow-300" />
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-3xl">🎅</span>
+                    <p className="text-2xl font-bold text-white tracking-wide">North Pole</p>
+                  </div>
+                  <p className="text-sm text-red-100 mt-3 font-semibold">Ho Ho Ho! 🎄</p>
+                </div>
               </div>
 
-              {/* Control Buttons */}
-              <div className="flex justify-center gap-6 pt-2">
-                <Button
-                  onClick={() => conversation.setMicMuted(!conversation.micMuted)}
-                  variant="outline"
-                  size="lg"
-                  className="rounded-full w-20 h-20 p-0 bg-green-500 border-0 hover:bg-green-600 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-                >
-                  {conversation.micMuted ? (
-                    <MicOff className="w-7 h-7 text-white" />
-                  ) : (
-                    <Mic className="w-7 h-7 text-white" />
-                  )}
-                </Button>
+              {/* Control Buttons with enhanced styling */}
+              <div className="flex justify-center gap-8 pt-4">
+                <div className="flex flex-col items-center gap-2">
+                  <Button
+                    onClick={() => conversation.setMicMuted(!conversation.micMuted)}
+                    variant="outline"
+                    size="lg"
+                    className={`rounded-full w-20 h-20 p-0 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110 ${
+                      conversation.micMuted 
+                        ? 'bg-gradient-to-br from-gray-400 to-gray-600 hover:from-gray-500 hover:to-gray-700' 
+                        : 'bg-gradient-to-br from-green-500 to-green-700 hover:from-green-600 hover:to-green-800'
+                    }`}
+                  >
+                    {conversation.micMuted ? (
+                      <MicOff className="w-8 h-8 text-white" />
+                    ) : (
+                      <Mic className="w-8 h-8 text-white" />
+                    )}
+                  </Button>
+                  <span className="text-xs font-semibold text-gray-600">
+                    {conversation.micMuted ? 'Unmute' : 'Mute'}
+                  </span>
+                </div>
 
-                <Button
-                  onClick={endCall}
-                  size="lg"
-                  className="rounded-full w-20 h-20 p-0 bg-red-500 hover:bg-red-600 border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-                >
-                  <PhoneOff className="w-7 h-7 text-white" />
-                </Button>
+                <div className="flex flex-col items-center gap-2">
+                  <Button
+                    onClick={endCall}
+                    size="lg"
+                    className="rounded-full w-20 h-20 p-0 bg-gradient-to-br from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
+                  >
+                    <PhoneOff className="w-8 h-8 text-white" />
+                  </Button>
+                  <span className="text-xs font-semibold text-gray-600">End Call</span>
+                </div>
               </div>
 
-              {/* Status Indicator */}
-              <div className="flex items-center justify-center gap-2 pt-2">
-                <div className={`w-3 h-3 rounded-full ${conversation.micMuted ? 'bg-red-500' : 'bg-green-500'} animate-pulse`}></div>
-                <p className="text-base text-red-700 font-semibold">
-                  {conversation.micMuted ? "Muted" : "Listening"}
+              {/* Status Indicator with better design */}
+              <div className="flex items-center justify-center gap-3 pt-2 bg-gray-50 rounded-full px-6 py-3 mx-auto w-fit">
+                <div className={`w-3 h-3 rounded-full ${conversation.micMuted ? 'bg-red-500' : 'bg-green-500'} animate-pulse shadow-lg`}></div>
+                <p className={`text-sm font-bold ${conversation.micMuted ? 'text-red-700' : 'text-green-700'}`}>
+                  {conversation.micMuted ? "Microphone Muted" : "Listening..."}
                 </p>
               </div>
             </CardContent>
